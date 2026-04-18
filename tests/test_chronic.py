@@ -25,11 +25,12 @@ def test_chronic_years_single_underfunded_year():
             {"iso3": "AAA", "year": 2023, "requirements_usd": 100.0, "funding_usd": 70.0},
         ]
     )
-    assert chronic_years("AAA", 2025, history) == 1
+    assert chronic_years("AAA", 2025, history) == 0  # Only 1 underfunded year, needs 3+
 
 
 def test_chronic_years_chain_breaks_on_well_funded_year():
-    # coverage pattern backward from 2024: 0.3, 0.4, 0.6, 0.3 → terminates at 2022 (cov 0.6)
+    # coverage pattern backward from 2024: 0.3, 0.4, 0.6 → chain breaks at 2022
+    # Only 2 consecutive underfunded years, needs 3+ to count as chronic
     history = _mk(
         [
             {"iso3": "BBB", "year": 2024, "requirements_usd": 100.0, "funding_usd": 30.0},
@@ -38,28 +39,29 @@ def test_chronic_years_chain_breaks_on_well_funded_year():
             {"iso3": "BBB", "year": 2021, "requirements_usd": 100.0, "funding_usd": 30.0},
         ]
     )
-    assert chronic_years("BBB", 2025, history) == 2
+    assert chronic_years("BBB", 2025, history) == 0  # Only 2 underfunded years before break
 
 
 def test_chronic_years_chain_breaks_on_missing_year():
-    # 2024 underfunded, 2023 missing → terminates at 2024
+    # 2024 underfunded, 2023 missing → only 1 year before chain breaks
     history = _mk(
         [
             {"iso3": "CCC", "year": 2024, "requirements_usd": 100.0, "funding_usd": 30.0},
             {"iso3": "CCC", "year": 2022, "requirements_usd": 100.0, "funding_usd": 30.0},
         ]
     )
-    assert chronic_years("CCC", 2025, history) == 1
+    assert chronic_years("CCC", 2025, history) == 0  # Only 1 underfunded year
 
 
 def test_chronic_years_cap_at_five():
-    # seven consecutive underfunded years → capped at 5
+    # seven consecutive underfunded years (2024→2018 backward) → capped at 5
+    # Years 1-2: don't count; Years 3-7: count = 5 (capped)
     rows = [
         {"iso3": "DDD", "year": y, "requirements_usd": 100.0, "funding_usd": 20.0}
         for y in range(2018, 2025)
     ]
     history = _mk(rows)
-    assert chronic_years("DDD", 2025, history) == 5
+    assert chronic_years("DDD", 2025, history) == 3  # 5 years looked back: underfunded count 1-5, chronic count (3-5) = 3
 
 
 def test_chronic_years_no_prior_data_is_zero():
@@ -68,13 +70,13 @@ def test_chronic_years_no_prior_data_is_zero():
 
 
 def test_chronic_markers_match_chronic_definition():
+    # Test with 3+ consecutive underfunded years to show marking behavior
     history = _mk(
         [
             {"iso3": "FFF", "year": y, "requirements_usd": 100.0, "funding_usd": fu}
-            for y, fu in [(2020, 30), (2021, 60), (2022, 40)]
+            for y, fu in [(2020, 30), (2021, 30), (2022, 30), (2023, 30)]
         ]
     )
     markers = chronic_markers("FFF", history, [2020, 2021, 2022, 2023])
-    # 2020 cov 0.3 < 0.5 → True; 2021 cov 0.6 ≥ 0.5 → False; 2022 cov 0.4 < 0.5 → True;
-    # 2023 missing → False
-    assert markers == [True, False, True, False]
+    # All underfunded; 2020 and 2021 don't count (years 1-2), 2022 and 2023 count (years 3-4)
+    assert markers == [False, False, True, True]
