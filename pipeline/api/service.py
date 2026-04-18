@@ -296,7 +296,7 @@ def _briefing_lead(country: CountryRow) -> str:
             f"{country.chronic_years} year{'s' if country.chronic_years > 1 else ''}."
         )
     else:
-        chronic = "The current year sets the baseline for coverage tracking."
+        chronic = ""
     return f"{intro} {funding} {chronic}"
 
 
