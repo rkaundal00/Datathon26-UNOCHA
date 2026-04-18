@@ -115,7 +115,6 @@ export function CustomWeightsPanel({
             <strong className="text-text">
               Custom weights use a linear composite; the default score is multiplicative.
             </strong>{" "}
-            Setting weights won&apos;t reproduce the default — they answer different questions.
           </p>
           <WeightSlider
             label="coverage gap"

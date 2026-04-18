@@ -23,7 +23,7 @@ const COLUMNS: Column[] = [
   { key: "pin", label: "PIN", sortable: true, className: "text-right" },
   { key: "pin_share", label: "PIN share", sortable: true, className: "text-right" },
   { key: "coverage_ratio", label: "Coverage", sortable: true, className: "text-right" },
-  { key: "unmet_need_usd", label: "Unmet need", sortable: true, className: "text-right" },
+  { key: "unmet_need_usd", label: "Funding Gap", sortable: true, className: "text-right" },
   { key: "gap_score", label: "Gap score", sortable: true, className: "text-right" },
   { key: "chronic_years", label: "Chronic", sortable: true, className: "text-center" },
   { key: "hrp_status", label: "Plan", sortable: true },

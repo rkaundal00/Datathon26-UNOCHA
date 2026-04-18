@@ -331,11 +331,6 @@ def _qualifiers(country: CountryRow) -> list[str]:
             "Donor concentration (HHI) is computed from 2026 transaction-level data only — "
             "pre-2026 transactions do not split donors."
         )
-    # Always present:
-    out.append(
-        "Refugee-hosting burden and demographic breakdowns are shown as PIN context only; "
-        "FTS does not split funding by demographic, so coverage is not computable at that level."
-    )
     return out
 
 

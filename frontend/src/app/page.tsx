@@ -35,7 +35,7 @@ export default async function Page(props: {
         <div className="mx-auto max-w-[1440px] px-4 py-3">
           <div className="flex items-center justify-between pb-2">
             <h1 className="text-lg font-bold">
-              Geo-Insight <span className="text-text-muted font-normal">· which crises are most overlooked?</span>
+              CrisisCompass <span className="text-text-muted font-normal">· makes every human life count</span>
             </h1>
             <div className="flex items-center gap-2">
               <ModeToggleBar value={urlState.mode} />

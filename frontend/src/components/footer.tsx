@@ -49,7 +49,6 @@ export function Footer({
         className={stale ? "rounded bg-amber-500/20 px-2 py-0.5 text-amber-700 dark:text-amber-300" : "text-text-muted"}
         title={meta.data_freshness}
       >
-        Data last refreshed {freshAgo}
       </span>
       <span className="flex-1" />
       <a

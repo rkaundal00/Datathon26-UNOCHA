@@ -16,9 +16,6 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         <h2 id="briefing-heading" className="text-lg font-semibold">
           {country.country}
         </h2>
-        <p className="text-xs text-text-muted">
-          {country.iso3} · HNO {country.hno_year} · {country.hrp_status}
-        </p>
       </header>
 
       <p className="text-sm leading-relaxed text-text" aria-live="polite">
@@ -38,7 +35,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
             </>
           }
         />
-        <Fact label="Unmet need" value={usdCompact(fact.unmet_need_usd)} />
+        <Fact label="Funding gap" value={usdCompact(fact.unmet_need_usd)} />
         <Fact
           label="Chronic underfunding"
           value={
@@ -62,26 +59,54 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         {fact.cbpf_allocations_total_usd != null && (
           <Fact label="CBPF total (historical)" value={usdCompact(fact.cbpf_allocations_total_usd)} />
         )}
-        <Fact label="Population" value={`${numCompact(fact.pin / fact.pin_share)} (ref ${country.population_reference_year})`} />
+        <Fact label="Population" value={`${numCompact(fact.pin / fact.pin_share)} (${country.population_reference_year})`} />
         <Fact label="HNO year" value={String(fact.hno_year)} />
       </dl>
 
       <div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Score decomposition</h3>
-        <p className="text-xs mt-1">
-          gap_score = (1 −{" "}
-          <span className="tabular">{Math.min(country.coverage_ratio, 1).toFixed(3)}</span>) ×{" "}
-          <span className="tabular">{country.pin_share.toFixed(3)}</span> ={" "}
-          <strong className="tabular">{country.gap_score.toFixed(3)}</strong>
-        </p>
-        {country.custom_gap_score != null && detail.meta.weights && (
-          <p className="text-xs mt-1 text-text-muted">
-            custom_gap_score = {detail.meta.weights.w_coverage.toFixed(2)} · coverage_gap +{" "}
-            {detail.meta.weights.w_pin.toFixed(2)} · pin_share +{" "}
-            {detail.meta.weights.w_chronic.toFixed(2)} · chronic/5 ={" "}
-            <strong className="text-text tabular">{country.custom_gap_score.toFixed(3)}</strong>
-          </p>
-        )}
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">How the gap score is calculated</h3>
+        <div className="text-xs space-y-3">
+          <div className="border-l-2 border-border pl-3">
+            <div className="font-medium mb-1">Default Score (Multiplicative)</div>
+            <ul className="text-text-muted space-y-1">
+              <li className="flex justify-between items-center gap-4">
+                <span>Funding shortfall (100% - coverage)</span>
+                <span className="tabular">{(1 - Math.min(country.coverage_ratio, 1)).toFixed(3)}</span>
+              </li>
+              <li className="flex justify-between items-center gap-4">
+                <span>× Share of global need (PIN share)</span>
+                <span className="tabular">{country.pin_share.toFixed(3)}</span>
+              </li>
+              <li className="flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border">
+                <span>Resulting Score</span>
+                <span className="tabular">{country.gap_score.toFixed(3)}</span>
+              </li>
+            </ul>
+          </div>
+          {country.custom_gap_score != null && detail.meta.weights && (
+            <div className="border-l-2 border-border pl-3 mt-3">
+              <div className="font-medium mb-1">Custom Score (Weighted Average)</div>
+              <ul className="text-text-muted space-y-1">
+                <li className="flex justify-between items-center gap-4">
+                  <span>Coverage gap (weight: {detail.meta.weights.w_coverage.toFixed(2)})</span>
+                  <span className="tabular">{(detail.meta.weights.w_coverage * (1 - Math.min(country.coverage_ratio, 1))).toFixed(3)}</span>
+                </li>
+                <li className="flex justify-between items-center gap-4">
+                  <span>+ Needs scale (weight: {detail.meta.weights.w_pin.toFixed(2)})</span>
+                  <span className="tabular">{(detail.meta.weights.w_pin * country.pin_share).toFixed(3)}</span>
+                </li>
+                <li className="flex justify-between items-center gap-4">
+                  <span>+ Chronic neglect (weight: {detail.meta.weights.w_chronic.toFixed(2)})</span>
+                  <span className="tabular">{(detail.meta.weights.w_chronic * (fact.chronic_years / 5)).toFixed(3)}</span>
+                </li>
+                <li className="flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border">
+                  <span>Resulting Score</span>
+                  <span className="tabular">{country.custom_gap_score.toFixed(3)}</span>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
 
       {briefing.qualifiers.length > 0 && (
