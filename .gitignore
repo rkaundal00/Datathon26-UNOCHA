@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Pipeline outputs (raw data under datasets/ is committed; derived data is not)
+processed/
+outputs/
+
+# macOS
+.DS_Store
+
+# Local CSV artifacts (source data lives as Parquet under datasets/)
+*.csv
