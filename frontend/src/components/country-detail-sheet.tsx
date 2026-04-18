@@ -1,5 +1,7 @@
 "use client";
 
+import * as Dialog from "@radix-ui/react-dialog";
+import * as Tabs from "@radix-ui/react-tabs";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CountryDetailResponse, DetailTab } from "@/lib/api-types";
@@ -7,19 +9,6 @@ import { fetchCountry } from "@/lib/api";
 import { mergeUrl } from "@/lib/url-state";
 import { ClusterDrilldown } from "@/components/cluster-drilldown";
 import { TrendView } from "@/components/trend-view";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 
 export function CountryDetailSheet({
   focusIso,
@@ -68,23 +57,27 @@ export function CountryDetailSheet({
   if (!focusIso) return null;
 
   return (
-    <Sheet open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
-      <SheetContent
-        side="bottom"
-        className="h-[80vh] overflow-auto sm:max-w-none"
-      >
-        <SheetHeader>
-          <SheetTitle>{data?.country.country ?? focusIso}</SheetTitle>
-          <SheetDescription>
-            Detail sheet — clusters, trend, population groups
-          </SheetDescription>
-        </SheetHeader>
-        <div className="px-6 pb-6">
-          <Tabs
+    <Dialog.Root open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
+        <Dialog.Content className="fixed left-1/2 bottom-0 z-50 h-[80vh] w-[min(960px,calc(100%-2rem))] -translate-x-1/2 rounded-t-lg border border-border bg-surface p-4 shadow-xl overflow-auto">
+          <div className="flex items-start justify-between">
+            <div>
+              <Dialog.Title className="text-lg font-semibold">
+                {data?.country.country ?? focusIso}
+              </Dialog.Title>
+              <Dialog.Description className="text-xs text-text-muted">
+                Detail sheet — clusters, trend, population groups
+              </Dialog.Description>
+            </div>
+            <Dialog.Close className="rounded p-1 text-text-muted hover:bg-surface-2">✕</Dialog.Close>
+          </div>
+          <Tabs.Root
             value={openTab ?? "clusters"}
             onValueChange={(v) => setTab(v as DetailTab)}
+            className="mt-3"
           >
-            <TabsList>
+            <Tabs.List className="mb-2 flex gap-2 border-b border-border">
               {(
                 [
                   ["clusters", "Clusters"],
@@ -92,41 +85,45 @@ export function CountryDetailSheet({
                   ["population", "Population groups"],
                 ] as [DetailTab, string][]
               ).map(([k, l]) => (
-                <TabsTrigger key={k} value={k}>
+                <Tabs.Trigger
+                  key={k}
+                  value={k}
+                  className="border-b-2 border-transparent px-3 py-1.5 text-sm data-[state=active]:border-accent data-[state=active]:text-text"
+                >
                   {l}
-                </TabsTrigger>
+                </Tabs.Trigger>
               ))}
-            </TabsList>
-            <TabsContent value="clusters" className="mt-3">
+            </Tabs.List>
+            <Tabs.Content value="clusters">
               {data ? (
                 <ClusterDrilldown
                   clusters={data.clusters}
                   populationGroups={[]}
                 />
               ) : (
-                <p className="py-6 text-sm text-muted-foreground">Loading…</p>
+                <p className="text-sm text-text-muted py-6">Loading…</p>
               )}
-            </TabsContent>
-            <TabsContent value="trend" className="mt-3">
+            </Tabs.Content>
+            <Tabs.Content value="trend">
               {data ? (
                 <TrendView trend={data.trend} year={data.meta.analysis_year} />
               ) : (
-                <p className="py-6 text-sm text-muted-foreground">Loading…</p>
+                <p className="text-sm text-text-muted py-6">Loading…</p>
               )}
-            </TabsContent>
-            <TabsContent value="population" className="mt-3">
+            </Tabs.Content>
+            <Tabs.Content value="population">
               {data ? (
                 <ClusterDrilldown
                   clusters={[]}
                   populationGroups={data.population_groups}
                 />
               ) : (
-                <p className="py-6 text-sm text-muted-foreground">Loading…</p>
+                <p className="text-sm text-text-muted py-6">Loading…</p>
               )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </SheetContent>
-    </Sheet>
+            </Tabs.Content>
+          </Tabs.Root>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
