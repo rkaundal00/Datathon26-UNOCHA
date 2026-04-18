@@ -47,6 +47,7 @@ export interface CountryRow {
   gap_score: number;
   custom_gap_score: number | null;
   chronic_years: number;
+  inform_severity: number | null;
   donor_concentration: number | null;
   hrp_status: HRPStatus;
   hno_year: number;
@@ -127,6 +128,7 @@ export interface FactSheet {
   coverage_ratio: number;
   unmet_need_usd: number;
   chronic_years: number;
+  inform_severity: number | null;
   donor_concentration: number | null;
   hrp_status: HRPStatus;
   hno_year: number;
@@ -154,6 +156,9 @@ export interface ExcludedCountryRow {
   iso3: string;
   country: string;
   pin: number | null;
+  requirements_usd: number | null;
+  funding_usd: number | null;
+  coverage_ratio: number | null;
   exclusion_reason: ExclusionReason;
   detail: string;
 }

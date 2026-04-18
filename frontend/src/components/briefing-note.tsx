@@ -135,10 +135,6 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
           ))}
         </ul>
       </div>
-
-      <div className="flex items-center gap-2 pt-1">
-        <Badge tone="neutral">lead source: {briefing.lead_source}</Badge>
-      </div>
     </section>
   );
 }

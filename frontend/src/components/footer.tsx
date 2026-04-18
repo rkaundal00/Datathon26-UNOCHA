@@ -71,15 +71,6 @@ export function Footer({
       >
         Copy share URL
       </button>
-      <a
-        href={calibrationCardHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline text-text-muted hover:text-text"
-        aria-label="Open calibration card (opens in new tab)"
-      >
-        Calibration card ↗
-      </a>
       {toast && (
         <div
           role="status"

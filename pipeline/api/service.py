@@ -188,6 +188,7 @@ def _row_to_country(
         hrp_status=row["hrp_status"],
         hno_year=int(row["hno_year"]),
         qa_flags=list(row["qa_flags"]),
+        inform_severity=float(row.get("inform_severity")) if row.get("inform_severity") is not None else None,
     )
 
 
@@ -410,6 +411,7 @@ def build_country_detail(
         donor_concentration=match.donor_concentration,
         hrp_status=match.hrp_status,
         hno_year=match.hno_year,
+        inform_severity=match.inform_severity,
         cbpf_allocations_total_usd=(
             int(country_total_usd(iso3)) if country_total_usd(iso3) is not None else None
         ),

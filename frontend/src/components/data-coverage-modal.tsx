@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { CoverageResponse, ExcludedCountryRow } from "@/lib/api-types";
 import { EXCLUSION_LABEL } from "@/lib/api-types";
 import { fetchCoverage } from "@/lib/api";
+import { numCompact, usdCompact, percent } from "@/lib/formatters";
 import { QaFlagList } from "@/components/qa-flag";
 import { Badge } from "@/components/ui/badge";
 
@@ -19,13 +20,22 @@ export function DataCoverageAnchor({
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<CoverageResponse | null>(null);
 
+  // Stringify params strictly for the dependency array to avoid infinite loops across re-renders
+  const paramsKey = JSON.stringify(params);
+  
   useEffect(() => {
-    if (open && !data) {
-      fetchCoverage(params)
-        .then(setData)
-        .catch(() => setData(null));
-    }
-  }, [open, data, params]);
+    if (!open) return;
+    
+    // We fetch whenever the modal opens or params meaningfully change.
+    // If we already have data, we might not refetch unless params changed since last time,
+    // but the simplest safe fix is refetching unconditionally on param change IF open.
+    fetchCoverage(params)
+      .then(setData)
+      .catch((e) => {
+        console.error("fetchCoverage failed", e);
+        setData(null);
+      });
+  }, [open, paramsKey]);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -96,12 +106,25 @@ function ExcludedTable({ rows }: { rows: ExcludedCountryRow[] }) {
           </h3>
           <ul className="text-xs divide-y divide-border border border-border rounded">
             {byReason[reason].map((r) => (
-              <li key={r.iso3} className="flex justify-between px-3 py-1.5">
-                <span>
-                  <strong>{r.country}</strong>{" "}
-                  <span className="text-text-muted">({r.iso3})</span>
-                </span>
-                <span className="text-text-muted">{r.detail}</span>
+              <li key={r.iso3} className="flex flex-col gap-1 sm:gap-0 sm:flex-row sm:items-start justify-between px-3 py-2">
+                <div className="flex flex-col min-w-[200px]">
+                  <span>
+                    <strong>{r.country}</strong>{" "}
+                    <span className="text-text-muted text-[11px]">({r.iso3})</span>
+                  </span>
+                  <div className="flex gap-2 text-[11px] text-text-muted mt-0.5">
+                    <span title="People in Need">
+                      PIN: <span className="text-text">{r.pin != null ? numCompact(r.pin) : "—"}</span>
+                    </span>
+                    <span title="Funding Requirements">
+                      Reqs: <span className="text-text">{r.requirements_usd != null ? usdCompact(r.requirements_usd) : "—"}</span>
+                    </span>
+                    <span title="Funding Coverage">
+                      Cov: <span className="text-text">{r.coverage_ratio != null ? percent(r.coverage_ratio) : "—"}</span>
+                    </span>
+                  </div>
+                </div>
+                <span className="text-text-muted sm:text-right max-w-sm leading-tight">{r.detail}</span>
               </li>
             ))}
           </ul>

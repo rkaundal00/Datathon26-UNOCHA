@@ -13,6 +13,7 @@ def build_flags(
     funding_usd: float | None,
     donor_concentration: float | None,
     hrp_status: str,
+    inform_severity: float | None,
     cluster_taxonomy_mismatch: bool = False,
 ) -> list[str]:
     """Return the sorted list of QA flag strings for a country row.
@@ -21,7 +22,9 @@ def build_flags(
       funding_imputed_zero, hno_stale, population_stale, donor_conc_2026_only,
       cluster_taxonomy_mismatch, severity_unavailable, preliminary_hno, hrp_status_unknown
     """
-    flags: list[str] = ["severity_unavailable"]
+    flags: list[str] = []
+    if inform_severity is None:
+        flags.append("severity_unavailable")
 
     if (requirements_usd or 0) > 0 and not (funding_usd and funding_usd > 0):
         flags.append("funding_imputed_zero")

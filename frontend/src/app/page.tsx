@@ -60,7 +60,7 @@ export default async function Page(props: {
           <Suspense fallback={<div className="text-sm text-text-muted">Loading table…</div>}>
             <CountryTable meta={ranking.meta} rows={ranking.rows} focusIso={focusIso} />
           </Suspense>
-          <ScatterPanels rows={ranking.rows} active={urlState.scatter} focusIso={focusIso} />
+          <ScatterPanels rows={ranking.rows} focusIso={focusIso} />
         </div>
         <aside className="lg:col-span-4">
           {detail ? (

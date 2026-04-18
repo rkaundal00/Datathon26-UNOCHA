@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CustomWeights } from "@/lib/api-types";
 import { mergeUrl } from "@/lib/url-state";
+import { SlidersHorizontal, ArrowDownUp, ShieldAlert, CircleAlert, RotateCcw, XCircle } from "lucide-react";
 
 type Weights = { coverage: number; pin: number; chronic: number };
 
@@ -100,54 +101,87 @@ export function CustomWeightsPanel({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-3">
+    <div className={`rounded-lg border transition-colors duration-200 overflow-hidden ${active ? "border-accent/40 bg-accent/5 ring-1 ring-accent/10" : "border-border bg-surface hover:border-text-muted"}`}>
       <button
-        className="flex w-full items-center justify-between text-sm"
+        className="flex w-full items-center justify-between p-3"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="font-semibold">Advanced: Custom weights</span>
-        <span>{open ? "▾" : "▸"}</span>
+        <div className="flex items-center gap-2">
+          <div className={`flex items-center justify-center rounded-md p-1.5 ${active ? "bg-accent text-surface" : "bg-surface-2 text-text-muted"}`}>
+            <SlidersHorizontal className="h-4 w-4" />
+          </div>
+          <div className="flex flex-col items-start px-1 text-left">
+            <span className="text-sm font-semibold leading-tight text-text">
+              Custom Rank Formula
+            </span>
+            <span className="text-[11px] text-text-muted flex items-center gap-1 font-medium mt-0.5">
+              {active ? (
+                <>
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                  Override Active: Reordering rows below
+                </>
+              ) : (
+                "Design a custom ranking composite"
+              )}
+            </span>
+          </div>
+        </div>
+        <span className="text-text-muted transition-transform duration-200 p-2" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+           <ChevronDownIcon />
+        </span>
       </button>
+      
       {open && (
-        <div className="mt-2 space-y-3">
-          <p className="text-[11px] text-text-muted leading-relaxed">
-            <strong className="text-text">
-              Custom weights use a linear composite; the default score is multiplicative.
-            </strong>{" "}
-          </p>
-          <WeightSlider
-            label="coverage gap"
-            value={weights.coverage}
-            onChange={(v) => setWeights((w) => renormalize("coverage", v, w))}
-            onCommit={(v) => commit(renormalize("coverage", v, weights))}
-          />
-          <WeightSlider
-            label="pin share"
-            value={weights.pin}
-            onChange={(v) => setWeights((w) => renormalize("pin", v, w))}
-            onCommit={(v) => commit(renormalize("pin", v, weights))}
-          />
-          <WeightSlider
-            label="chronic years"
-            value={weights.chronic}
-            onChange={(v) => setWeights((w) => renormalize("chronic", v, w))}
-            onCommit={(v) => commit(renormalize("chronic", v, weights))}
-          />
-          <div className="flex items-center justify-between pt-1">
+        <div className="px-4 pb-4 pt-1 animate-in slide-in-from-top-2 fade-in duration-200 border-t border-border/50">
+          <div className="mb-4 flex items-start gap-2 rounded-md bg-amber-500/10 p-2.5 text-amber-700 dark:text-amber-400 text-[11.5px] leading-relaxed">
+            <CircleAlert className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+            <p>
+              Custom weights use a <strong>linear composite</strong> to reorder crises; the default score is <strong>multiplicative</strong>.
+              Setting weights won't reproduce the default ranking.
+            </p>
+          </div>
+          
+          <div className="space-y-5 px-1">
+            <WeightSlider
+              label="Funding Coverage Gap"
+              value={weights.coverage}
+              onChange={(v) => setWeights((w) => renormalize("coverage", v, w))}
+              onCommit={(v) => commit(renormalize("coverage", v, weights))}
+            />
+            <WeightSlider
+              label="People in Need (PIN) Share"
+              value={weights.pin}
+              onChange={(v) => setWeights((w) => renormalize("pin", v, w))}
+              onCommit={(v) => commit(renormalize("pin", v, weights))}
+            />
+            <WeightSlider
+              label="Chronic Funding Shortfall"
+              value={weights.chronic}
+              onChange={(v) => setWeights((w) => renormalize("chronic", v, w))}
+              onCommit={(v) => commit(renormalize("chronic", v, weights))}
+            />
+          </div>
+          
+          <div className="mt-5 flex items-center justify-between border-t border-border pt-3">
             <button
-              className="text-xs text-text-muted underline hover:text-text"
+              className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text transition-colors font-medium"
               onClick={() => {
                 const next = { coverage: 0.34, pin: 0.33, chronic: 0.33 };
                 setWeights(next);
                 commit(next);
               }}
             >
-              Reset to balanced
+              <RotateCcw className="h-3 w-3" />
+              Reset Balanced
             </button>
             {active && (
-              <button className="text-xs text-text-muted underline hover:text-text" onClick={close}>
-                Close &amp; remove custom
+              <button 
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-surface-2 text-xs font-semibold text-text-muted hover:bg-red-500/10 hover:text-red-500 transition-colors" 
+                onClick={close}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                Clear Override
               </button>
             )}
           </div>
@@ -157,25 +191,37 @@ export function CustomWeightsPanel({
   );
 }
 
+function ChevronDownIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinelinejoin="round">
+      <path d="m6 9 6 6 6-6"/>
+    </svg>
+  );
+}
+
 function WeightSlider({
   label,
   value,
   onChange,
   onCommit,
+  color = "bg-accent",
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   onCommit: (v: number) => void;
+  color?: string;
 }) {
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <label>{label}</label>
-        <span className="tabular font-semibold">{Math.round(value * 100)}%</span>
+    <div className="group">
+      <div className="flex items-center justify-between text-xs mb-1.5">
+        <label className="font-medium text-text-muted group-hover:text-text transition-colors">{label}</label>
+        <span className="tabular-nums font-semibold text-text bg-surface-2 px-1.5 py-0.5 rounded min-w-[3ch] text-center">
+          {Math.round(value * 100)}<span className="font-normal text-text-muted">%</span>
+        </span>
       </div>
       <Slider.Root
-        className="relative mt-1 flex h-5 w-full touch-none select-none items-center"
+        className="relative flex h-5 w-full touch-none select-none items-center"
         value={[Math.round(value * 100)]}
         min={0}
         max={100}
@@ -183,10 +229,10 @@ function WeightSlider({
         onValueChange={(v) => onChange(v[0] / 100)}
         onValueCommit={(v) => onCommit(v[0] / 100)}
       >
-        <Slider.Track className="relative h-1 grow rounded-full bg-surface-2">
-          <Slider.Range className="absolute h-full rounded-full bg-accent" />
+        <Slider.Track className="relative h-1.5 grow rounded-full bg-surface-2 overflow-hidden shadow-inner">
+          <Slider.Range className={`absolute h-full rounded-full ${color} opacity-80`} />
         </Slider.Track>
-        <Slider.Thumb className="block size-3 rounded-full border-2 border-accent bg-surface shadow" />
+        <Slider.Thumb className="block h-4 w-4 rounded-full border-2 border-surface bg-text shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 transition-shadow cursor-grab active:cursor-grabbing hover:scale-110" />
       </Slider.Root>
     </div>
   );

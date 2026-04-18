@@ -33,14 +33,14 @@ export function ScatterPanels({
     router.replace(`/?${qs}`, { scroll: false });
   }
 
-  // Use PIN (log scale) as "Level of Need" and PIN Share as "Severity Proxy"
+  // Use PIN (log scale) as "Level of Need" and INFORM Severity as "Severity Proxy"
   const data = rows
-    .filter((r) => r.pin > 0)
+    .filter((r) => r.pin > 0 && r.inform_severity != null)
     .map((r) => ({
       iso3: r.iso3,
       country: r.country,
       x: Math.log10(Math.max(1, r.pin)),
-      y: r.pin_share,
+      y: r.inform_severity!,
       z: Math.max(1, r.unmet_need_usd),
       pin: r.pin,
       unmet: r.unmet_need_usd,
@@ -51,7 +51,7 @@ export function ScatterPanels({
   const sortedY = [...data].sort((a, b) => a.y - b.y);
   
   const medianX = sortedX.length > 0 ? sortedX[Math.floor(sortedX.length / 2)].x : 6;
-  const medianY = sortedY.length > 0 ? sortedY[Math.floor(sortedY.length / 2)].y : 0.5;
+  const medianY = sortedY.length > 0 ? sortedY[Math.floor(sortedY.length / 2)].y : 5.0;
 
   return (
     <section className="rounded-lg border border-border bg-surface p-3">
@@ -82,10 +82,10 @@ export function ScatterPanels({
             <YAxis
               type="number"
               dataKey="y"
-              domain={['dataMin - 0.05', 'dataMax + 0.05']}
-              tickFormatter={(v) => `${Math.round(v * 100)}%`}
+              domain={[0, 10]}
+              tickFormatter={(v) => v.toFixed(1)}
               label={{
-                value: "Severity (Share of Pop. in Need)",
+                value: "INFORM Severity Index (0-10)",
                 angle: -90,
                 position: "left",
                 offset: 10,
@@ -117,7 +117,7 @@ export function ScatterPanels({
                     fillOpacity={isFocus ? 0.9 : 0.6}
                     stroke={isFocus ? "var(--score-high)" : "var(--accent)"}
                     strokeWidth={isFocus ? 2 : 1}
-                    onClick={() => p.payload?.iso3 && onClickPoint(p.payload.iso3)}
+                    onClick={() => p.payload?.iso3 && clickPoint(p.payload.iso3)}
                     style={{ cursor: "pointer", transition: "all 0.2s" }}
                   />
                 );
@@ -127,13 +127,13 @@ export function ScatterPanels({
         </ResponsiveContainer>
         
         {/* Quadrant Labels overlay */}
-        <div className="absolute top-2 left-20 text-[10px] font-medium text-text-muted opacity-60">
+        <div className="absolute top-2 left-25 text-[10px] font-medium text-text-muted opacity-60">
           High Severity,<br />Lower Absolute Need
         </div>
         <div className="absolute top-2 right-4 text-right text-[10px] font-medium text-text-muted opacity-60">
           High Severity &<br />High Absolute Need
         </div>
-        <div className="absolute bottom-20 left-20 text-[10px] font-medium text-text-muted opacity-60">
+        <div className="absolute bottom-20 left-25 text-[10px] font-medium text-text-muted opacity-60">
           Lower Severity,<br />Lower Absolute Need
         </div>
         <div className="absolute bottom-20 right-4 text-right text-[10px] font-medium text-text-muted opacity-60">
@@ -142,7 +142,7 @@ export function ScatterPanels({
       </div>
       
       <p className="mt-4 text-[11px] italic text-text-muted">
-        Quadrant crosshairs are dynamically centered on the median of the current views dataset group. Severity is estimated using the proportion of the country's population currently in need (PIN Share).
+        Quadrant crosshairs are dynamically centered on the median of the current views dataset group. Severity is estimated using the INFORM Severity Index (March 2026 dataset). Countries missing severity data are excluded from this view.
       </p>
     </section>
   );
@@ -157,8 +157,8 @@ function CompassTooltip({ active, payload }: { active?: boolean; payload?: { pay
       <div className="grid grid-cols-[1fr_auto] gap-x-3">
         <span className="text-text-muted">Level of Need (PIN):</span>
         <span className="font-medium">{numCompact(p.pin)}</span>
-        <span className="text-text-muted">Severity (PIN Share):</span>
-        <span className="font-medium">{percent(p.y)}</span>
+        <span className="text-text-muted">INFORM Severity:</span>
+        <span className="font-medium">{p.y.toFixed(1)}/10</span>
         <span className="text-text-muted">Unmet Need:</span>
         <span className="font-medium">{usdCompact(p.unmet)}</span>
       </div>

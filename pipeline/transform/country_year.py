@@ -21,6 +21,8 @@ from pipeline.ingest.fts import (
     load_incoming_2026,
 )
 from pipeline.ingest.hno import country_level_pin_table, load_hno
+from pipeline.ingest.inform import ingest_inform_severity
+from pathlib import Path
 from pipeline.transform.qa import build_flags
 
 STRICT_HRP_TYPES = {"HRP", "FlashAppeal", "RegionalRP"}
@@ -73,6 +75,10 @@ def _cached_admin0() -> pl.DataFrame:
 
 
 @lru_cache(maxsize=1)
+def _cached_inform_severity() -> pl.DataFrame:
+    return ingest_inform_severity(Path("datasets"))
+
+@lru_cache(maxsize=1)
 def _cached_country_names() -> pl.DataFrame:
     return country_names()
 
@@ -95,12 +101,14 @@ def build_country_year_table(
     fts_agg = appeals_country_year(appeals, analysis_year)
     hrp = hrp_status_table(appeals, analysis_year)
     donors = donor_concentration_table(_cached_incoming()) if analysis_year == 2026 else None
+    inform_severity = _cached_inform_severity()
 
     df = (
         hno.join(names, on="iso3", how="left")
         .join(population, on="iso3", how="left")
         .join(fts_agg, on="iso3", how="left")
         .join(hrp, on="iso3", how="left")
+        .join(inform_severity, on="iso3", how="left")
     )
     df = df.with_columns(
         pl.col("requirements_usd").fill_null(0.0),
@@ -162,6 +170,7 @@ def build_country_year_table(
             funding_usd=row.get("funding_usd"),
             donor_concentration=row.get("donor_concentration"),
             hrp_status=row.get("hrp_status", "None"),
+            inform_severity=row.get("inform_severity"),
         )
     out = pl.from_dicts(rows)
 
@@ -175,6 +184,7 @@ def build_country_year_table(
         pl.col("coverage_ratio").cast(pl.Float64),
         pl.col("unmet_need_usd").cast(pl.Float64),
         pl.col("pin_share").cast(pl.Float64),
+        pl.col("inform_severity").cast(pl.Float64),
         pl.col("gap_score").cast(pl.Float64),
         pl.col("chronic_years").cast(pl.Int8),
         pl.col("hno_year").cast(pl.Int64),
@@ -197,6 +207,7 @@ def build_excluded_table(
     names = _cached_country_names()
     fts_agg = appeals_country_year(appeals, analysis_year)
     hrp = hrp_status_table(appeals, analysis_year)
+    inform_severity = _cached_inform_severity()
 
     # Universe: any iso3 with real signal of a current crisis — an HNO row in
     # analysis_year or the fallback year, or an FTS appeal with requirements > 0.
@@ -214,6 +225,7 @@ def build_excluded_table(
         .join(population, on="iso3", how="left")
         .join(fts_agg, on="iso3", how="left")
         .join(hrp, on="iso3", how="left")
+        .join(inform_severity, on="iso3", how="left")
     )
     df = df.with_columns(
         pl.col("requirements_usd").fill_null(0.0),
@@ -256,11 +268,24 @@ def build_excluded_table(
         if reason is None:
             continue  # In cohort; not excluded.
 
+        import math
+        import math
+        reqs_val = reqs or 0.0
+        fund_val = r.get("funding_usd") or 0.0
+        cov = fund_val / reqs_val if reqs_val > 0 else None
+        if cov is not None and math.isinf(cov): cov = None
+        if cov is not None and math.isnan(cov): cov = None
+        if reqs_val is not None and math.isnan(reqs_val): reqs_val = 0.0
+        if reqs_val is not None and math.isinf(reqs_val): reqs_val = 0.0
+        
         rows.append(
             {
                 "iso3": iso3,
                 "country": country,
                 "pin": int(pin) if pin is not None else None,
+                "requirements_usd": reqs_val,
+                "funding_usd": fund_val,
+                "coverage_ratio": cov,
                 "exclusion_reason": reason,
                 "detail": detail,
             }

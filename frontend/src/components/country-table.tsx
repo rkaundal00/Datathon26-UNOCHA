@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import type { CountryRow, RankingMeta } from "@/lib/api-types";
 import { cn } from "@/lib/cn";
 import { numCompact, percent, usdCompact } from "@/lib/formatters";
@@ -41,7 +41,6 @@ export function CountryTable({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [expanded, setExpanded] = useState<string | null>(null);
   const hasCustom = rows[0]?.custom_gap_score != null;
 
   const customCol: Column | null = hasCustom
@@ -123,7 +122,6 @@ export function CountryTable({
           <tbody className="divide-y divide-border">
             {rows.map((row) => {
               const isFocused = focusIso === row.iso3;
-              const isOpen = expanded === row.iso3;
               return (
                 <Fragment key={row.iso3}>
                   <tr
@@ -153,13 +151,7 @@ export function CountryTable({
                     <td className="px-3 py-2 text-right" title={row.unmet_need_usd.toLocaleString()}>
                       {usdCompact(row.unmet_need_usd)}
                     </td>
-                    <td
-                      className="px-3 py-2 text-right"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpanded(isOpen ? null : row.iso3);
-                      }}
-                    >
+                    <td className="px-3 py-2 text-right">
                       <div className="flex flex-col items-end gap-1">
                         <span className="font-semibold">{row.gap_score.toFixed(3)}</span>
                         <ScoreBar value={row.gap_score} className="w-20" />
@@ -184,32 +176,6 @@ export function CountryTable({
                       <QaFlagList flags={row.qa_flags} />
                     </td>
                   </tr>
-                  {isOpen && (
-                    <tr className="bg-surface-2/60">
-
-                      <td
-                        colSpan={allCols.length}
-                        className="px-4 py-2 text-xs text-text-muted"
-                      >
-                        <strong className="text-text">Gap score decomposition:</strong>{" "}
-                        (1 − min(coverage, 1)) × pin_share = (1 −{" "}
-                        {Math.min(row.coverage_ratio, 1).toFixed(3)}) ×{" "}
-                        {row.pin_share.toFixed(3)} ={" "}
-                        <strong className="text-text">{row.gap_score.toFixed(3)}</strong>
-                        {row.custom_gap_score != null && meta.weights && (
-                          <span className="ml-4">
-                            <strong className="text-text">Custom:</strong>{" "}
-                            {meta.weights.w_coverage.toFixed(2)} × coverage_gap +{" "}
-                            {meta.weights.w_pin.toFixed(2)} × pin_share +{" "}
-                            {meta.weights.w_chronic.toFixed(2)} × chronic/5 ={" "}
-                            <strong className="text-text">
-                              {row.custom_gap_score.toFixed(3)}
-                            </strong>
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  )}
                 </Fragment>
               );
             })}

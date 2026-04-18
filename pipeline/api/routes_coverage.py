@@ -64,6 +64,9 @@ def get_coverage(
             iso3=r["iso3"],
             country=r["country"] or r["iso3"],
             pin=r.get("pin"),
+            requirements_usd=r.get("requirements_usd"),
+            funding_usd=r.get("funding_usd"),
+            coverage_ratio=r.get("coverage_ratio"),
             exclusion_reason=r["exclusion_reason"],
             detail=r["detail"],
         )

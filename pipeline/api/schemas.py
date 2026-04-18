@@ -48,7 +48,8 @@ class CountryRow(BaseModel):
     unmet_need_usd: int
     gap_score: float = Field(..., ge=0.0, le=1.0)
     custom_gap_score: float | None = None
-    chronic_years: int = Field(..., ge=0, le=5)
+    chronic_years: int
+    inform_severity: float | None = Field(..., ge=0, le=10)
     donor_concentration: float | None = None
     hrp_status: HRPStatus
     hno_year: int
@@ -128,6 +129,7 @@ class FactSheet(BaseModel):
     coverage_ratio: float
     unmet_need_usd: int
     chronic_years: int
+    inform_severity: float | None
     donor_concentration: float | None = None
     hrp_status: HRPStatus
     hno_year: int
@@ -172,6 +174,9 @@ class ExcludedCountryRow(BaseModel):
     iso3: str
     country: str
     pin: int | None = None
+    requirements_usd: float | None = None
+    funding_usd: float | None = None
+    coverage_ratio: float | None = None
     exclusion_reason: ExclusionReason
     detail: str
 
