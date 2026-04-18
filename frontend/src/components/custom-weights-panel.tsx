@@ -22,7 +22,10 @@ function parseWeights(raw: string | null): Weights {
 }
 
 function serializeWeights(w: Weights): string {
-  return `coverage:${w.coverage.toFixed(2)},pin:${w.pin.toFixed(2)},chronic:${w.chronic.toFixed(2)}`;
+  const c = Math.round(w.coverage * 100) / 100;
+  const p = Math.round(w.pin * 100) / 100;
+  const ch = Math.round((1 - c - p) * 100) / 100;
+  return `coverage:${c.toFixed(2)},pin:${p.toFixed(2)},chronic:${ch.toFixed(2)}`;
 }
 
 function renormalize(
@@ -30,15 +33,12 @@ function renormalize(
   next: number,
   current: Weights,
 ): Weights {
-  const other1 = which === "coverage" ? "pin" : "coverage";
-  const other2 = which === "chronic" ? "pin" : "chronic";
-  if (other1 === other2) {
-    // default both others to evenly split
-  }
   const fixed = Math.max(0, Math.min(1, next));
   const remaining = 1 - fixed;
-  const otherA = which === "coverage" ? "pin" : "coverage";
-  const otherB = which === "chronic" ? "coverage" : "chronic";
+  const others = (["coverage", "pin", "chronic"] as const).filter(
+    (k) => k !== which,
+  );
+  const [otherA, otherB] = others;
   // otherA + otherB must sum to remaining; scale proportionally
   const othersSum = current[otherA] + current[otherB];
   if (othersSum <= 0) {
