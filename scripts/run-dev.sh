@@ -30,6 +30,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 echo "[run-dev] backend  → ${API_BASE}"
+CORS_ORIGINS="http://localhost:${FRONTEND_PORT},http://127.0.0.1:${FRONTEND_PORT}" \
 .venv/bin/uvicorn pipeline.api.main:app \
   --host 127.0.0.1 --port "$BACKEND_PORT" --reload &
 BACKEND_PID=$!
