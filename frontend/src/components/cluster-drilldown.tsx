@@ -1,6 +1,7 @@
 import type { ClusterRow, PopulationGroupRow } from "@/lib/api-types";
 import { numCompact, percent, usdCompact } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
+import { toneToBadgeProps } from "@/components/qa-flag";
 
 export function ClusterDrilldown({
   clusters,
@@ -17,7 +18,7 @@ export function ClusterDrilldown({
       <div>
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-semibold">Clusters (by unmet need)</h3>
-          <Badge tone={taxonomyMismatch ? "amber" : "neutral"}>
+          <Badge {...toneToBadgeProps(taxonomyMismatch ? "amber" : "neutral")}>
             Source: {taxonomyMismatch ? "raw cluster (globalCluster unavailable)" : "globalCluster (harmonized)"}
           </Badge>
         </div>
@@ -47,7 +48,7 @@ export function ClusterDrilldown({
                     <div className="flex items-center gap-2">
                       <span>{c.cluster_name}</span>
                       {c.qa_flags.map((f) => (
-                        <Badge key={f} tone="amber">{f}</Badge>
+                        <Badge key={f} {...toneToBadgeProps("amber")}>{f}</Badge>
                       ))}
                     </div>
                   </td>

@@ -22,34 +22,29 @@ export default async function Page(props: {
   const apiParams = apiParamsFromUrlState(urlState);
 
   const ranking = await fetchRanking(apiParams);
-  const focusIso = urlState.focus && ranking.rows.find((r) => r.iso3 === urlState.focus)
-    ? urlState.focus
-    : ranking.rows[0]?.iso3 ?? null;
-  const detailPromise = focusIso ? fetchCountry(focusIso, apiParams) : Promise.resolve(null);
-  const detail = await detailPromise;
+  const focusIso =
+    urlState.focus && ranking.rows.find((r) => r.iso3 === urlState.focus)
+      ? urlState.focus
+      : ranking.rows[0]?.iso3 ?? null;
+  const detail = focusIso ? await fetchCountry(focusIso, apiParams) : null;
 
   return (
     <>
       <KeyboardShortcuts />
-      <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur">
-        <div className="mx-auto max-w-[1440px] px-4 py-3">
-          <div className="flex items-center justify-between pb-2">
-            <h1 className="text-lg font-bold">
-              Geo-Insight <span className="text-text-muted font-normal">· which crises are most overlooked?</span>
-            </h1>
-            <div className="flex items-center gap-2">
-              <ModeToggleBar value={urlState.mode} />
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
+      <div className="sticky top-[53px] z-30 border-b bg-background/95 backdrop-blur">
+        <div className="mx-auto max-w-[1440px] px-4 py-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
             <ScopeBanner meta={ranking.meta} />
+            <ModeToggleBar value={urlState.mode} />
           </div>
-          <div className="pt-2 flex items-center gap-3 text-xs">
-            <DataCoverageAnchor params={apiParams} excludedCount={ranking.meta.excluded_count} />
-            <span className="text-text-muted">Press ? for keyboard shortcuts</span>
+          <div className="flex items-center gap-3 text-xs">
+            <DataCoverageAnchor
+              params={apiParams}
+              excludedCount={ranking.meta.excluded_count}
+            />
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="flex flex-col gap-4 lg:col-span-8">
@@ -57,16 +52,28 @@ export default async function Page(props: {
             active={Boolean(urlState.weights)}
             initial={ranking.meta.weights}
           />
-          <Suspense fallback={<div className="text-sm text-text-muted">Loading table…</div>}>
-            <CountryTable meta={ranking.meta} rows={ranking.rows} focusIso={focusIso} />
+          <Suspense
+            fallback={
+              <div className="text-sm text-muted-foreground">Loading table…</div>
+            }
+          >
+            <CountryTable
+              meta={ranking.meta}
+              rows={ranking.rows}
+              focusIso={focusIso}
+            />
           </Suspense>
-          <ScatterPanels rows={ranking.rows} active={urlState.scatter} focusIso={focusIso} />
+          <ScatterPanels
+            rows={ranking.rows}
+            active={urlState.scatter}
+            focusIso={focusIso}
+          />
         </div>
         <aside className="lg:col-span-4">
           {detail ? (
             <BriefingNote detail={detail} />
           ) : (
-            <div className="rounded-lg border border-border bg-surface p-4 text-sm text-text-muted">
+            <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
               Select a country to view its briefing note.
             </div>
           )}

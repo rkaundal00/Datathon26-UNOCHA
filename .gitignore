@@ -34,3 +34,6 @@ frontend/test-results/
 .pytest_cache/
 htmlcov/
 .coverage
+
+# Local MCP / tool configs
+.mcp.json

@@ -1,25 +1,13 @@
 "use client";
 
-import * as Slider from "@radix-ui/react-slider";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CustomWeights } from "@/lib/api-types";
 import { mergeUrl } from "@/lib/url-state";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 
 type Weights = { coverage: number; pin: number; chronic: number };
-
-function parseWeights(raw: string | null): Weights {
-  if (!raw) return { coverage: 0.34, pin: 0.33, chronic: 0.33 };
-  const out: Weights = { coverage: 0, pin: 0, chronic: 0 };
-  for (const tok of raw.split(",")) {
-    const [k, v] = tok.split(":");
-    if (!k || v == null) continue;
-    if (k === "coverage") out.coverage = Number(v);
-    if (k === "pin") out.pin = Number(v);
-    if (k === "chronic") out.chronic = Number(v);
-  }
-  return out;
-}
 
 function serializeWeights(w: Weights): string {
   return `coverage:${w.coverage.toFixed(2)},pin:${w.pin.toFixed(2)},chronic:${w.chronic.toFixed(2)}`;
@@ -30,16 +18,10 @@ function renormalize(
   next: number,
   current: Weights,
 ): Weights {
-  const other1 = which === "coverage" ? "pin" : "coverage";
-  const other2 = which === "chronic" ? "pin" : "chronic";
-  if (other1 === other2) {
-    // default both others to evenly split
-  }
   const fixed = Math.max(0, Math.min(1, next));
   const remaining = 1 - fixed;
   const otherA = which === "coverage" ? "pin" : "coverage";
   const otherB = which === "chronic" ? "coverage" : "chronic";
-  // otherA + otherB must sum to remaining; scale proportionally
   const othersSum = current[otherA] + current[otherB];
   if (othersSum <= 0) {
     return {
@@ -100,22 +82,24 @@ export function CustomWeightsPanel({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-3">
+    <div className="rounded-lg border bg-card p-3">
       <button
         className="flex w-full items-center justify-between text-sm"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
         <span className="font-semibold">Advanced: Custom weights</span>
-        <span>{open ? "▾" : "▸"}</span>
+        <span className="text-muted-foreground">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
-        <div className="mt-2 space-y-3">
-          <p className="text-[11px] text-text-muted leading-relaxed">
-            <strong className="text-text">
-              Custom weights use a linear composite; the default score is multiplicative.
+        <div className="mt-3 space-y-4">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">
+              Custom weights use a linear composite; the default score is
+              multiplicative.
             </strong>{" "}
-            Setting weights won&apos;t reproduce the default — they answer different questions.
+            Setting weights won&apos;t reproduce the default — they answer
+            different questions.
           </p>
           <WeightSlider
             label="coverage gap"
@@ -136,8 +120,9 @@ export function CustomWeightsPanel({
             onCommit={(v) => commit(renormalize("chronic", v, weights))}
           />
           <div className="flex items-center justify-between pt-1">
-            <button
-              className="text-xs text-text-muted underline hover:text-text"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 const next = { coverage: 0.34, pin: 0.33, chronic: 0.33 };
                 setWeights(next);
@@ -145,11 +130,11 @@ export function CustomWeightsPanel({
               }}
             >
               Reset to balanced
-            </button>
+            </Button>
             {active && (
-              <button className="text-xs text-text-muted underline hover:text-text" onClick={close}>
+              <Button variant="ghost" size="sm" onClick={close}>
                 Close &amp; remove custom
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -173,22 +158,19 @@ function WeightSlider({
     <div>
       <div className="flex items-center justify-between text-xs">
         <label>{label}</label>
-        <span className="tabular font-semibold">{Math.round(value * 100)}%</span>
+        <span className="tabular font-semibold">
+          {Math.round(value * 100)}%
+        </span>
       </div>
-      <Slider.Root
-        className="relative mt-1 flex h-5 w-full touch-none select-none items-center"
+      <Slider
+        className="mt-2"
         value={[Math.round(value * 100)]}
         min={0}
         max={100}
         step={1}
         onValueChange={(v) => onChange(v[0] / 100)}
         onValueCommit={(v) => onCommit(v[0] / 100)}
-      >
-        <Slider.Track className="relative h-1 grow rounded-full bg-surface-2">
-          <Slider.Range className="absolute h-full rounded-full bg-accent" />
-        </Slider.Track>
-        <Slider.Thumb className="block size-3 rounded-full border-2 border-accent bg-surface shadow" />
-      </Slider.Root>
+      />
     </div>
   );
 }

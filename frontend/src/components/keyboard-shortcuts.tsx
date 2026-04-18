@@ -1,10 +1,17 @@
 "use client";
 
-import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { mergeUrl } from "@/lib/url-state";
 import type { Mode } from "@/lib/api-types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const SHORTCUTS: { key: string; action: string }[] = [
   { key: "1 / 2 / 3", action: "Switch mode: Acute / Structural / Combined" },
@@ -51,38 +58,37 @@ export function KeyboardShortcuts() {
         });
         router.replace(`/?${qs}`, { scroll: false });
       }
-      if (e.key === "Escape") {
-        if (overlay) setOverlay(false);
-      }
+      if (e.key === "Escape" && overlay) setOverlay(false);
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [router, searchParams, overlay]);
 
   return (
-    <Dialog.Root open={overlay} onOpenChange={setOverlay}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Dialog.Content className="fixed inset-1/2 z-50 w-96 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-4 shadow-xl">
-          <Dialog.Title className="text-lg font-semibold">Keyboard shortcuts</Dialog.Title>
-          <Dialog.Description className="text-xs text-text-muted">
+    <Dialog open={overlay} onOpenChange={setOverlay}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Keyboard shortcuts</DialogTitle>
+          <DialogDescription>
             Shortcuts are active when no input is focused.
-          </Dialog.Description>
-          <ul className="mt-3 space-y-1 text-sm">
-            {SHORTCUTS.map((s) => (
-              <li key={s.key} className="flex justify-between">
-                <kbd className="rounded border border-border bg-surface-2 px-2 py-0.5 font-mono text-xs">
-                  {s.key}
-                </kbd>
-                <span className="text-text-muted">{s.action}</span>
-              </li>
-            ))}
-          </ul>
-          <Dialog.Close className="mt-3 rounded border border-border px-3 py-1 text-sm hover:bg-surface-2">
+          </DialogDescription>
+        </DialogHeader>
+        <ul className="space-y-1.5 text-sm">
+          {SHORTCUTS.map((s) => (
+            <li key={s.key} className="flex items-center justify-between gap-3">
+              <kbd className="rounded border bg-muted px-2 py-0.5 font-mono text-xs">
+                {s.key}
+              </kbd>
+              <span className="text-muted-foreground">{s.action}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => setOverlay(false)}>
             Close
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
