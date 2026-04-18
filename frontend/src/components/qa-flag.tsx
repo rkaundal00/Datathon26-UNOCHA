@@ -1,6 +1,9 @@
+"use client";
+
 import { Badge, type BadgeTone } from "@/components/ui/badge";
 import type { QAFlag } from "@/lib/api-types";
-import { QA_FLAG_LABEL } from "@/lib/api-types";
+import { FLAG_COPY } from "@/lib/help-copy";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const TONE: Record<QAFlag, BadgeTone> = {
   funding_imputed_zero: "red",
@@ -24,38 +27,28 @@ export function QaFlagList({
     ? flags.filter((f) => f !== "severity_unavailable")
     : flags;
   if (visible.length === 0) {
-    return (
-      <span className="text-text-muted text-xs">—</span>
-    );
+    return <span className="text-text-muted text-xs">—</span>;
   }
   return (
     <span className="flex flex-wrap items-center gap-1">
-      {visible.map((f) => (
-        <Badge key={f} tone={TONE[f]} title={QA_FLAG_LABEL[f]}>
-          {shortLabel(f)}
-        </Badge>
-      ))}
+      {visible.map((f) => {
+        const copy = FLAG_COPY[f];
+        return (
+          <Tooltip
+            key={f}
+            content={
+              <div className="space-y-1">
+                <div className="font-semibold text-text">{copy.label}</div>
+                <div className="text-text-muted">{copy.tooltip}</div>
+              </div>
+            }
+          >
+            <span className="inline-flex">
+              <Badge tone={TONE[f]}>{copy.short}</Badge>
+            </span>
+          </Tooltip>
+        );
+      })}
     </span>
   );
-}
-
-function shortLabel(flag: QAFlag): string {
-  switch (flag) {
-    case "funding_imputed_zero":
-      return "imputed $0";
-    case "hno_stale":
-      return "HNO stale";
-    case "population_stale":
-      return "pop stale";
-    case "donor_conc_2026_only":
-      return "HHI 2026";
-    case "cluster_taxonomy_mismatch":
-      return "taxonomy";
-    case "severity_unavailable":
-      return "no sev";
-    case "preliminary_hno":
-      return "HNO prelim";
-    case "hrp_status_unknown":
-      return "HRP ?";
-  }
 }

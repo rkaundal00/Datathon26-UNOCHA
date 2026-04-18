@@ -1,33 +1,48 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Fragment } from "react";
 import type { CountryRow, RankingMeta } from "@/lib/api-types";
 import { cn } from "@/lib/cn";
 import { numCompact, percent, usdCompact } from "@/lib/formatters";
+import { COLUMN_META, type ColumnKey } from "@/lib/columns";
 import { ChronicDots, ScoreBar } from "@/components/ui/score-bar";
 import { QaFlagList } from "@/components/qa-flag";
 import { Badge } from "@/components/ui/badge";
 import { mergeUrl } from "@/lib/url-state";
+import { HeaderCell } from "@/components/table/header-cell";
+import { ZeroCell } from "@/components/table/zero-cell";
+import { ConfidenceGlyph } from "@/components/table/confidence-glyph";
+import { Tooltip } from "@/components/ui/tooltip";
+import {
+  CoverageValueTooltip,
+  GapScoreValueTooltip,
+  PinShareValueTooltip,
+  PinValueTooltip,
+  UnmetValueTooltip,
+} from "@/components/table/value-tooltip";
+import { PLAN_COPY } from "@/lib/help-copy";
 
-interface Column {
-  key: string;
-  label: string;
-  className?: string;
-  sortable: boolean;
+type Align = "left" | "right" | "center";
+
+interface ColumnSpec {
+  key: ColumnKey;
+  align: Align;
 }
 
-const COLUMNS: Column[] = [
-  { key: "country", label: "Country", sortable: true },
-  { key: "pin", label: "PIN", sortable: true, className: "text-right" },
-  { key: "pin_share", label: "PIN share", sortable: true, className: "text-right" },
-  { key: "coverage_ratio", label: "Coverage", sortable: true, className: "text-right" },
-  { key: "unmet_need_usd", label: "Funding Gap", sortable: true, className: "text-right" },
-  { key: "gap_score", label: "Gap score", sortable: true, className: "text-right" },
-  { key: "chronic_years", label: "Chronic", sortable: true, className: "text-center" },
-  { key: "hrp_status", label: "Plan", sortable: true },
-  { key: "qa_flags", label: "Flags", sortable: false },
+const BASE_COLS: ColumnSpec[] = [
+  { key: "country", align: "left" },
+  { key: "pin", align: "right" },
+  { key: "pin_share", align: "right" },
+  { key: "coverage_ratio", align: "right" },
+  { key: "unmet_need_usd", align: "right" },
+  { key: "gap_score", align: "right" },
+];
+
+const TAIL_COLS: ColumnSpec[] = [
+  { key: "chronic_years", align: "center" },
+  { key: "hrp_status", align: "left" },
+  { key: "qa_flags", align: "left" },
 ];
 
 export function CountryTable({
@@ -43,12 +58,9 @@ export function CountryTable({
   const searchParams = useSearchParams();
   const hasCustom = rows[0]?.custom_gap_score != null;
 
-  const customCol: Column | null = hasCustom
-    ? { key: "custom_gap_score", label: "Custom", sortable: true, className: "text-right" }
-    : null;
-  const allCols = customCol
-    ? [...COLUMNS.slice(0, 6), customCol, ...COLUMNS.slice(6)]
-    : COLUMNS;
+  const cols: ColumnSpec[] = hasCustom
+    ? [...BASE_COLS, { key: "custom_gap_score", align: "right" }, ...TAIL_COLS]
+    : [...BASE_COLS, ...TAIL_COLS];
 
   function clickRow(iso3: string) {
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
@@ -57,13 +69,12 @@ export function CountryTable({
     router.replace(`/?${qs}`, { scroll: false });
   }
 
-  function clickSort(col: Column) {
-    if (!col.sortable) return;
-    const currentSort = meta.sort;
-    const nextDir =
-      currentSort === col.key && meta.sort_dir === "desc" ? "asc" : "desc";
+  function clickSort(key: string) {
+    const col = COLUMN_META[key as ColumnKey];
+    if (!col?.sortable) return;
+    const nextDir = meta.sort === key && meta.sort_dir === "desc" ? "asc" : "desc";
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
-      sort: col.key,
+      sort: key,
       sort_dir: nextDir,
     });
     router.replace(`/?${qs}`, { scroll: false });
@@ -84,38 +95,22 @@ export function CountryTable({
             </>
           )}
         </span>
-        <span>{rows.length} rows</span>
+        <span>{rows.length} rows · analysis year {meta.analysis_year}</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-surface-2 text-[11px] uppercase tracking-wider text-text-muted">
+          <thead className="bg-surface-2">
             <tr>
-              {allCols.map((col) => (
-                <th
-                  key={col.key}
-                  aria-sort={
-                    meta.sort === col.key
-                      ? meta.sort_dir === "desc"
-                        ? "descending"
-                        : "ascending"
-                      : "none"
-                  }
-                  className={cn(
-                    "px-3 py-2 text-left font-semibold select-none",
-                    col.className,
-                    col.sortable && "cursor-pointer hover:text-text",
-                  )}
-                  onClick={() => clickSort(col)}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {col.label}
-                    {meta.sort === col.key && (
-                      meta.sort_dir === "desc"
-                        ? <ChevronDown className="size-3" />
-                        : <ChevronUp className="size-3" />
-                    )}
-                  </span>
-                </th>
+              {cols.map((c) => (
+                <HeaderCell
+                  key={c.key}
+                  col={COLUMN_META[c.key]}
+                  sortKey={meta.sort}
+                  sortDir={meta.sort_dir}
+                  onSort={() => clickSort(c.key)}
+                  analysisYear={meta.analysis_year}
+                  align={c.align}
+                />
               ))}
             </tr>
           </thead>
@@ -137,41 +132,116 @@ export function CountryTable({
                         <span className="text-[11px] text-text-muted">{row.iso3}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right" title={row.pin.toLocaleString()}>
-                      {numCompact(row.pin)}
-                    </td>
-                    <td className="px-3 py-2 text-right">{percent(row.pin_share)}</td>
-                    <td
-                      className="px-3 py-2 text-right"
-                      title={`raw ${row.coverage_ratio.toFixed(4)}`}
-                    >
-                      {percent(row.coverage_ratio)}
-                      {row.coverage_ratio > 1 && <span className="ml-1 text-amber-600">↑</span>}
-                    </td>
-                    <td className="px-3 py-2 text-right" title={row.unmet_need_usd.toLocaleString()}>
-                      {usdCompact(row.unmet_need_usd)}
-                    </td>
+
                     <td className="px-3 py-2 text-right">
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="font-semibold">{row.gap_score.toFixed(3)}</span>
-                        <ScoreBar value={row.gap_score} className="w-20" />
-                      </div>
+                      <span className="inline-flex items-center">
+                        <PinValueTooltip pin={row.pin} year={row.hno_year}>
+                          {numCompact(row.pin)}
+                        </PinValueTooltip>
+                        <ConfidenceGlyph col={COLUMN_META.pin} row={row} />
+                      </span>
                     </td>
-                    {customCol && (
+
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center">
+                        <PinShareValueTooltip
+                          pin={row.pin}
+                          population={row.population}
+                          popYear={row.population_reference_year}
+                        >
+                          {percent(row.pin_share)}
+                        </PinShareValueTooltip>
+                        <ConfidenceGlyph col={COLUMN_META.pin_share} row={row} />
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center">
+                        <ZeroCell row={row} kind="coverage">
+                          <CoverageValueTooltip
+                            requirements={row.requirements_usd}
+                            funding={row.funding_usd}
+                            year={row.analysis_year}
+                          >
+                            <span>
+                              {percent(row.coverage_ratio)}
+                              {row.coverage_ratio > 1 && (
+                                <span className="ml-1 text-amber-600">↑</span>
+                              )}
+                            </span>
+                          </CoverageValueTooltip>
+                        </ZeroCell>
+                        <ConfidenceGlyph col={COLUMN_META.coverage_ratio} row={row} />
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center">
+                        <ZeroCell row={row} kind="unmet">
+                          <UnmetValueTooltip
+                            requirements={row.requirements_usd}
+                            funding={row.funding_usd}
+                            year={row.analysis_year}
+                          >
+                            <span>{usdCompact(row.unmet_need_usd)}</span>
+                          </UnmetValueTooltip>
+                        </ZeroCell>
+                        <ConfidenceGlyph col={COLUMN_META.unmet_need_usd} row={row} />
+                      </span>
+                    </td>
+
+                    <td className="px-3 py-2 text-right">
+                      <span className="inline-flex items-center">
+                        <GapScoreValueTooltip
+                          coverage={row.coverage_ratio}
+                          pinShare={row.pin_share}
+                          gap={row.gap_score}
+                        >
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="font-semibold">{row.gap_score.toFixed(3)}</span>
+                            <ScoreBar value={row.gap_score} className="w-20" />
+                          </div>
+                        </GapScoreValueTooltip>
+                        <ConfidenceGlyph col={COLUMN_META.gap_score} row={row} />
+                      </span>
+                    </td>
+
+                    {hasCustom && (
                       <td className="px-3 py-2 text-right tabular">
-                        <span className="font-semibold">
-                          {row.custom_gap_score?.toFixed(3) ?? "—"}
+                        <span className="inline-flex items-center">
+                          <span className="font-semibold">
+                            {row.custom_gap_score?.toFixed(3) ?? "—"}
+                          </span>
+                          <ConfidenceGlyph col={COLUMN_META.custom_gap_score} row={row} />
                         </span>
                       </td>
                     )}
+
                     <td className="px-3 py-2 text-center">
                       <ChronicDots value={row.chronic_years} />
                     </td>
+
                     <td className="px-3 py-2">
-                      <Badge tone={row.hrp_status === "HRP" ? "indigo" : "neutral"}>
-                        {row.hrp_status}
-                      </Badge>
+                      <Tooltip
+                        content={
+                          <div className="space-y-1">
+                            <div className="font-semibold text-text">
+                              {PLAN_COPY[row.hrp_status].label}
+                            </div>
+                            <div className="text-text-muted">
+                              {PLAN_COPY[row.hrp_status].tooltip}
+                            </div>
+                          </div>
+                        }
+                      >
+                        <span className="inline-flex">
+                          <Badge tone={row.hrp_status === "HRP" ? "indigo" : "neutral"}>
+                            {PLAN_COPY[row.hrp_status].short}
+                          </Badge>
+                        </span>
+                      </Tooltip>
                     </td>
+
                     <td className="px-3 py-2">
                       <QaFlagList flags={row.qa_flags} />
                     </td>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Geo-Insight — UNOCHA gap analysis",
@@ -19,7 +20,9 @@ export default function RootLayout({
         >
           Skip to country table
         </a>
-        {children}
+        <TooltipProvider delayDuration={200} skipDelayDuration={100}>
+          {children}
+        </TooltipProvider>
       </body>
     </html>
   );

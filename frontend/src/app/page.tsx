@@ -11,6 +11,7 @@ import { DataCoverageAnchor } from "@/components/data-coverage-modal";
 import { Footer } from "@/components/footer";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { CountryDetailSheet } from "@/components/country-detail-sheet";
+import { MethodologyButton } from "@/components/methodology-drawer";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function Page(props: {
           </div>
           <div className="pt-2 flex items-center gap-3 text-xs">
             <DataCoverageAnchor params={apiParams} excludedCount={ranking.meta.excluded_count} />
+            <MethodologyButton />
             <span className="text-text-muted">Press ? for keyboard shortcuts</span>
           </div>
         </div>
