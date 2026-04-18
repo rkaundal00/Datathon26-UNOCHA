@@ -8,18 +8,18 @@ import { mergeUrl } from "@/lib/url-state";
 const OPTIONS: { value: Mode; label: string; tooltip: string }[] = [
   {
     value: "acute",
-    label: "Acute",
-    tooltip: "Sort by acute funding gap. Scatter A emphasizes X-axis.",
+    label: "Emerging",
+    tooltip: "Crises that need funding right now but aren't getting it.",
   },
   {
     value: "structural",
-    label: "Structural",
-    tooltip: "Sort by chronic-year count. Scatter A emphasizes Y-axis.",
+    label: "Recurring",
+    tooltip: "Crises consistently underfunded over 3+ years.",
   },
   {
     value: "combined",
-    label: "Combined",
-    tooltip: "Default. Sort by composite gap score. Scatter A balanced.",
+    label: "Overall",
+    tooltip: "Combined view of both emerging and recurring underfunding.",
   },
 ];
 
