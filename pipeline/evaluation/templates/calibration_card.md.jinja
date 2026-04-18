@@ -1,0 +1,123 @@
+# Geo-Insight calibration card — {{ analysis_date }}
+
+**What this card claims.** The default composite `gap_score = (1 − min(coverage, 1)) × pin_share`
+is stable under reasonable denominator and cohort-floor variations, and does meaningful
+ranking work above its components alone. It is not a claim of ground-truth "correctness."
+
+---
+
+## 1. Default configuration
+
+- Analysis year: **{{ analysis_year }}**
+- Denominator: **PIN** (People in Need)
+- Cohort floor: **PIN ≥ 1,000,000**
+- Active HRP / Flash / Regional required: **yes**
+- Cohort size: **{{ default_cohort_size }}** countries
+
+## 2. Sensitivity — denominator × cohort floor
+
+_9 rankings; canonical is `PIN_1M`._
+
+| Definition | Top-10 Jaccard vs default | Median \|Δrank\| | Max \|Δrank\| | Countries gained/lost |
+|---|---|---|---|---|
+{% for row in sensitivity_rows -%}
+| {{ row.definition }} | {{ '%.2f' % row.jaccard_top10 }}{% if row.is_default %} (default){% endif %} | {{ row.median_rank_delta }} | {{ row.max_rank_delta }} | +{{ row.countries_added|length }} / −{{ row.countries_dropped|length }} |
+{% endfor %}
+
+**Reading.** Top-10 Jaccard ≥ 0.7 under all eight swaps → composite is stable. The worst
+non-default Jaccard is **{{ '%.2f' % worst_jaccard }}** on **{{ worst_definition }}**,
+driven by {{ worst_drop_count }} countries dropped and {{ worst_add_count }} added.
+
+## 3. Cohort strictness (auxiliary swap)
+
+_Single-axis: `require_hrp=true` (default) vs `require_hrp=false` (adds `Other` + `Unknown`
+plan types). Both always exclude `hrp_status='None'` and `requirements_usd=0`._
+
+- Default cohort size: **{{ strictness.default.cohort_size }}**. Relaxed cohort size: **{{ strictness.relaxed.cohort_size }}**.
+- Top-10 Jaccard, default ↔ relaxed: **{{ '%.2f' % strictness.jaccard_top10 }}**
+- Countries added by relaxation:{% if strictness.countries_added_by_relaxation %} {% for a in strictness.countries_added_by_relaxation %}`{{ a.iso3 }}` ({{ a.hrp_status }}, rank {{ a.rank_in_relaxed }}){% if not loop.last %}, {% endif %}{% endfor %}{% else %} *(none)*{% endif %}
+- Median \|Δrank\| on iso3s in both: **{{ strictness.rank_delta_median }}**; max: **{{ strictness.rank_delta_max }}**
+
+**Reading.** If Jaccard ≥ 0.8 the chip is a minor framing choice. If < 0.6 the chip is
+load-bearing for the top-10 and the added countries are named above.
+
+## 4. 2024 back-test
+
+_Comparing `analysis_year=2024` to `analysis_year=2025`. Cohort membership can change
+between years because the amended cohort filter always excludes `hrp_status='None'` and
+`requirements_usd=0`._
+
+| Class | Count | Share |
+|---|---|---|
+{% for row in backtest_summary -%}
+| {{ row.cls }} | {{ row['count'] }} | {{ '%.0f%%' % (row.share * 100) }} |
+{% endfor %}
+
+**Largest movers (top 5 by |Δrank|, among iso3s ranked in both years):**
+
+| Country | Rank 2024 | Rank 2025 | Δ | Class | Rationale |
+|---|---|---|---|---|---|
+{% for mover in largest_movers -%}
+| {{ mover.country }} | {{ mover.rank_2024 }} | {{ mover.rank_2025 }} | {{ mover.delta_rank }} | {{ mover.cls }} | {{ mover.rationale }} |
+{% endfor %}
+
+**Cohort transitions (sample of up to 5 each way):**
+
+| Country | 2024 → 2025 | Specific reason |
+|---|---|---|
+{% for t in transitions_in -%}
+| {{ t.country }} | excluded → ranked | {{ t.rationale }} |
+{% endfor -%}
+{% for t in transitions_out -%}
+| {{ t.country }} | ranked → excluded | {{ t.rationale }} |
+{% endfor %}
+
+## 5. Component-vs-composite disagreement
+
+_Cases where the composite departs from its loudest component._
+
+| Country | rank_gap | rank_unmet | rank_pinshare | rank_coverage_gap | What the composite is doing |
+|---|---|---|---|---|---|
+{% for case in disagreement -%}
+| {{ case.country }} | {{ case.rank_gap }} | {{ case.rank_unmet }} | {{ case.rank_pinshare }} | {{ case.rank_coverage_gap }} | {{ case.interpretation }} |
+{% endfor %}
+
+## 6. Known limitations
+
+- **Severity not modeled in MVP.** No severity column in the provided HNO Parquet files.
+  Scatter B uses an absolute-vs-proportional burden frame instead: X = `log10(pin)`,
+  Y = `pin_share`, bubble = `unmet_need_usd`. Severity wiring is post-MVP.
+- **Cohort always excludes countries with no appeal of record.** `hrp_status='None'` and
+  `requirements_usd=0` rows are never in-cohort — the ranking can't say anything about
+  them. This is an analytical boundary, not a claim that those countries are
+  well-resourced or not overlooked. Excluded countries appear in the Data coverage panel
+  with their exclusion reason.
+- **`cluster_taxonomy_mismatch` is a QA flag, not an exclusion reason.** When a country's
+  cluster-level request doesn't resolve in the harmonized `globalCluster` taxonomy, the
+  row stays in-cohort and carries the flag; the cluster drill-down shows the raw-taxonomy
+  fallback in its header.
+- **Donor concentration is 2026-only.** HHI cannot be back-computed pre-2026 from the
+  provided transaction file.
+- **2026 HNO is preliminary.** National-only. Subnational views are disabled when 2026 is
+  selected.
+- **FTS is self-reported.** Funding figures are eventually-consistent and retroactively
+  revised.
+
+## 7. What the composite does NOT claim
+
+- That a country ranked #1 is objectively "most overlooked" in any external-validation
+  sense.
+- That a country **excluded** from the cohort is "not overlooked" — a country with no
+  appeal of record often is overlooked in a stronger sense than one the ranking captures.
+  The ranking is a lens over countries with documented need AND a declared plan.
+- That coordinator weights in the Advanced panel reproduce the default ranking (they
+  can't — linear vs multiplicative).
+- That ranking changes between runs are errors — `data_freshness` shifts with FTS
+  revisions.
+
+## 8. Reproducibility
+
+- Regenerate: `python scripts/regenerate_calibration_card.py`
+- Data freshness (max Parquet mtime): **{{ data_freshness }}**
+- This card is linked from the app's Footer via `<Footer calibrationCardHref={...} />`
+  (see `spec-frontend.md` §4.11).

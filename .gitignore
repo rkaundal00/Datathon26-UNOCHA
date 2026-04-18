@@ -7,10 +7,30 @@ __pycache__/
 
 # Pipeline outputs (raw data under datasets/ is committed; derived data is not)
 processed/
-outputs/
+outputs/*
+!outputs/calibration_card.md
 
 # macOS
 .DS_Store
 
 # Local CSV artifacts (source data lives as Parquet under datasets/)
 *.csv
+!pipeline/ingest/cbpf_country_map.csv
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.turbo/
+frontend/.vercel/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.env*.local
+frontend/.playwright-report/
+frontend/test-results/
+
+# pytest / coverage
+.pytest_cache/
+htmlcov/
+.coverage
