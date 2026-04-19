@@ -144,7 +144,7 @@ def build_sector_projection_rows(
         coverage = (fun / req) if req > 0 else 0.0
         unmet = max(0, req - fun)
         pin_share = max(0.0, min(1.0, (pin_c / pop) if pop > 0 else 0.0))
-        score = gap_score(coverage, pin_share)
+        score = gap_score(coverage, pin_share, pin_c)
 
         flags: list[str] = []
         if req == 0 and fun == 0:
