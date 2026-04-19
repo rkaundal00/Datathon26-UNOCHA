@@ -19,7 +19,10 @@ export type QAFlag =
   | "severity_unavailable"
   | "preliminary_hno"
   | "hrp_status_unknown"
-  | "cluster_funding_missing";
+  | "cluster_funding_missing"
+  | "fts_year_fallback"
+  | "need_proxy_inform"
+  | "population_unavailable";
 
 export type ExclusionReason =
   | "no_active_hrp"
@@ -50,10 +53,10 @@ export interface CountryRow {
   iso3: string;
   country: string;
   analysis_year: number;
-  pin: number;
-  population: number;
-  population_reference_year: number;
-  pin_share: number;
+  pin: number | null;
+  population: number | null;
+  population_reference_year: number | null;
+  pin_share: number | null;
   requirements_usd: number;
   funding_usd: number;
   coverage_ratio: number;
@@ -64,7 +67,7 @@ export interface CountryRow {
   inform_severity: number | null;
   donor_concentration: number | null;
   hrp_status: HRPStatus;
-  hno_year: number;
+  hno_year: number | null;
   qa_flags: QAFlag[];
   sector: SectorProjection | null;
 }
@@ -144,8 +147,8 @@ export interface TrendSeries {
 }
 
 export interface FactSheet {
-  pin: number;
-  pin_share: number;
+  pin: number | null;
+  pin_share: number | null;
   requirements_usd: number;
   funding_usd: number;
   coverage_ratio: number;
@@ -154,7 +157,7 @@ export interface FactSheet {
   inform_severity: number | null;
   donor_concentration: number | null;
   hrp_status: HRPStatus;
-  hno_year: number;
+  hno_year: number | null;
   cbpf_allocations_total_usd: number | null;
 }
 
@@ -192,10 +195,22 @@ export interface InCohortFlaggedRow {
   qa_flags: QAFlag[];
 }
 
+export interface InCohortFallbackRow {
+  iso3: string;
+  country: string;
+  qa_flags: QAFlag[];
+  gap_score: number;
+  requirements_usd: number;
+  funding_usd: number;
+  coverage_ratio: number | null;
+  inform_severity: number | null;
+}
+
 export interface CoverageResponse {
   meta: RankingMeta;
   excluded: ExcludedCountryRow[];
   in_cohort_flagged: InCohortFlaggedRow[];
+  in_cohort_fallback: InCohortFallbackRow[];
 }
 
 export const QA_FLAG_LABEL: Record<QAFlag, string> = {
@@ -208,6 +223,9 @@ export const QA_FLAG_LABEL: Record<QAFlag, string> = {
   preliminary_hno: "2026 HNO is preliminary",
   hrp_status_unknown: "Plan type unknown",
   cluster_funding_missing: "No FTS funding reported for this sector",
+  fts_year_fallback: "FTS: prior-year fallback used",
+  need_proxy_inform: "Need proxied from INFORM Severity",
+  population_unavailable: "No COD-PS population baseline",
 };
 
 export const EXCLUSION_LABEL: Record<ExclusionReason, string> = {

@@ -49,7 +49,16 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
       </p>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-        <Fact label="PIN" value={`${numCompact(fact.pin)} (${percent(fact.pin_share)})`} />
+        <Fact
+          label="PIN"
+          value={
+            fact.pin != null && fact.pin_share != null
+              ? `${numCompact(fact.pin)} (${percent(fact.pin_share)})`
+              : fact.pin != null
+                ? `${numCompact(fact.pin)} (no population baseline)`
+                : "Not published — INFORM Severity proxy"
+          }
+        />
         <Fact label="Requirements" value={usdCompact(fact.requirements_usd)} />
         <Fact label="Funding" value={usdCompact(fact.funding_usd)} />
         <Fact
@@ -84,11 +93,13 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         {fact.cbpf_allocations_total_usd != null && (
           <Fact label="CBPF total (historical)" value={usdCompact(fact.cbpf_allocations_total_usd)} />
         )}
-        <Fact label="Population" value={`${numCompact(fact.pin / fact.pin_share)} (${country.population_reference_year})`} />
-        <Fact label="HNO year" value={String(fact.hno_year)} />
-        
-        <Fact 
-          label="Plan Type" 
+        {fact.pin != null && fact.pin > 0 && fact.pin_share != null && fact.pin_share > 0 && country.population_reference_year != null && (
+          <Fact label="Population" value={`${numCompact(fact.pin / fact.pin_share)} (${country.population_reference_year})`} />
+        )}
+        {fact.hno_year != null && <Fact label="HNO year" value={String(fact.hno_year)} />}
+
+        <Fact
+          label="Plan Type"
           value={
             <span className="inline-flex items-center gap-1">
               {country.hrp_status !== "HRP" && country.hrp_status !== "FlashAppeal" && country.hrp_status !== "RegionalRP" && (
@@ -98,7 +109,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
                 {PLAN_COPY[country.hrp_status].short}
               </span>
             </span>
-          } 
+          }
         />
       </dl>
 
@@ -113,8 +124,12 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
                 <span className="tabular">{(1 - Math.min(country.coverage_ratio, 1)).toFixed(2)}</span>
               </li>
               <li className="flex justify-between items-center gap-4">
-                <span>× Share of global need (PIN share)</span>
-                <span className="tabular">{country.pin_share.toFixed(2)}</span>
+                <span>× {country.pin_share != null ? "Share of global need (PIN share)" : "Need proxy (INFORM severity / 10)"}</span>
+                <span className="tabular">
+                  {country.pin_share != null
+                    ? country.pin_share.toFixed(2)
+                    : ((country.inform_severity ?? 0) / 10).toFixed(2)}
+                </span>
               </li>
               <li className={cn("flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border", country.qa_flags.includes("funding_imputed_zero") || country.qa_flags.includes("population_stale") ? "text-amber-700/80 dark:text-amber-300/80" : "")}>
                 <span>Resulting Score</span>
@@ -135,7 +150,9 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
                 </li>
                 <li className="flex justify-between items-center gap-4">
                   <span>+ Needs scale (weight: {detail.meta.weights.w_pin.toFixed(2)})</span>
-                  <span className="tabular">{(detail.meta.weights.w_pin * country.pin_share).toFixed(2)}</span>
+                  <span className="tabular">
+                    {(detail.meta.weights.w_pin * (country.pin_share ?? (country.inform_severity ?? 0) / 10)).toFixed(2)}
+                  </span>
                 </li>
                 <li className="flex justify-between items-center gap-4">
                   <span>+ Chronic neglect (weight: {detail.meta.weights.w_chronic.toFixed(2)})</span>

@@ -22,6 +22,9 @@ QAFlag = Literal[
     "preliminary_hno",
     "hrp_status_unknown",
     "cluster_funding_missing",
+    "fts_year_fallback",
+    "need_proxy_inform",
+    "population_unavailable",
 ]
 ExclusionReason = Literal[
     "no_active_hrp",
@@ -52,10 +55,10 @@ class CountryRow(BaseModel):
     iso3: str = Field(..., min_length=3, max_length=3)
     country: str
     analysis_year: int
-    pin: int
-    population: int
-    population_reference_year: int
-    pin_share: float = Field(..., ge=0.0, le=1.0)
+    pin: int | None = None
+    population: int | None = None
+    population_reference_year: int | None = None
+    pin_share: float | None = Field(default=None, ge=0.0, le=1.0)
     requirements_usd: int
     funding_usd: int
     coverage_ratio: float  # raw, uncapped
@@ -66,7 +69,7 @@ class CountryRow(BaseModel):
     inform_severity: float | None = Field(..., ge=0, le=10)
     donor_concentration: float | None = None
     hrp_status: HRPStatus
-    hno_year: int
+    hno_year: int | None = None
     qa_flags: list[QAFlag]
     sector: SectorProjection | None = None
 
@@ -145,8 +148,8 @@ class TrendSeries(BaseModel):
 
 
 class FactSheet(BaseModel):
-    pin: int
-    pin_share: float
+    pin: int | None = None
+    pin_share: float | None = None
     requirements_usd: int
     funding_usd: int
     coverage_ratio: float
@@ -155,7 +158,7 @@ class FactSheet(BaseModel):
     inform_severity: float | None
     donor_concentration: float | None = None
     hrp_status: HRPStatus
-    hno_year: int
+    hno_year: int | None = None
     cbpf_allocations_total_usd: int | None = None
 
 
@@ -210,10 +213,22 @@ class InCohortFlaggedRow(BaseModel):
     qa_flags: list[QAFlag]
 
 
+class InCohortFallbackRow(BaseModel):
+    iso3: str
+    country: str
+    qa_flags: list[QAFlag]
+    gap_score: float
+    requirements_usd: int
+    funding_usd: int
+    coverage_ratio: float | None = None
+    inform_severity: float | None = None
+
+
 class CoverageResponse(BaseModel):
     meta: RankingMeta
     excluded: list[ExcludedCountryRow]
     in_cohort_flagged: list[InCohortFlaggedRow]
+    in_cohort_fallback: list[InCohortFallbackRow] = Field(default_factory=list)
 
 
 # ---------- NL query (reserved) ----------

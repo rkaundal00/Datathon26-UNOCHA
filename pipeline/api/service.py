@@ -47,6 +47,7 @@ from pipeline.transform.clusters import (
 from pipeline.transform.country_year import (
     build_country_year_table,
     build_excluded_table,
+    in_cohort_fallback_table,
     in_cohort_flagged_table,
 )
 from pipeline.transform.trend import trend_series
@@ -159,16 +160,25 @@ def _row_to_country(
     Adds custom_gap_score when weights are provided. Clips values for schema conformance:
     pin_share and gap_score are clamped to [0, 1] — coverage_ratio is left raw.
     """
-    pin_share = max(0.0, min(1.0, _clean_number(row["pin_share"])))
+    pin_share_raw = row.get("pin_share")
+    pin_share = (
+        max(0.0, min(1.0, _clean_number(pin_share_raw)))
+        if pin_share_raw is not None
+        else None
+    )
     gap = max(0.0, min(1.0, _clean_number(row["gap_score"])))
     coverage = _clean_number(row["coverage_ratio"])
     chronic = int(row["chronic_years"] or 0)
 
     custom = None
     if weights is not None:
+        # Fall back to severity-based need axis when pin_share is unavailable.
+        need_axis = pin_share if pin_share is not None else (
+            (row.get("inform_severity") or 0.0) / 10.0
+        )
         custom = custom_gap_score(
             coverage_gap(coverage),
-            pin_share,
+            need_axis,
             chronic_norm(chronic),
             w_coverage=weights.w_coverage,
             w_pin=weights.w_pin,
@@ -180,13 +190,18 @@ def _row_to_country(
     if donor_conc is not None and (math.isnan(donor_conc) if isinstance(donor_conc, float) else False):
         donor_conc = None
 
+    pin_val = row.get("pin")
+    pop_val = row.get("population")
+    pop_ref_val = row.get("population_reference_year")
+    hno_year_val = row.get("hno_year")
+
     return CountryRow(
         iso3=row["iso3"],
         country=row["country"] or row["iso3"],
         analysis_year=int(row["analysis_year"]),
-        pin=int(row["pin"] or 0),
-        population=int(row["population"] or 0),
-        population_reference_year=int(row["population_reference_year"] or 0),
+        pin=int(pin_val) if pin_val is not None else None,
+        population=int(pop_val) if pop_val is not None else None,
+        population_reference_year=int(pop_ref_val) if pop_ref_val is not None else None,
         pin_share=pin_share,
         requirements_usd=int(row["requirements_usd"] or 0),
         funding_usd=int(row["funding_usd"] or 0),
@@ -197,7 +212,7 @@ def _row_to_country(
         chronic_years=chronic,
         donor_concentration=donor_conc,
         hrp_status=row["hrp_status"],
-        hno_year=int(row["hno_year"]),
+        hno_year=int(hno_year_val) if hno_year_val is not None else None,
         qa_flags=list(row["qa_flags"]),
         inform_severity=float(row.get("inform_severity")) if row.get("inform_severity") is not None else None,
     )
@@ -311,17 +326,39 @@ def build_flagged_rows(
     ]
 
 
+def build_fallback_rows(
+    *, analysis_year: int, pin_floor: int, require_hrp: bool
+) -> list[dict]:
+    table = in_cohort_fallback_table(analysis_year, pin_floor, require_hrp)
+    return table.to_dicts()
+
+
 # ---------- country detail ----------
 
 
 def _briefing_lead(country: CountryRow) -> str:
     """Template lead. Three sentences max, present tense, no numbers outside the template."""
-    pin_m = f"{country.pin / 1_000_000:.1f} million"
-    pin_pct = f"{country.pin_share:.0%}"
-    intro = (
-        f"In {country.country}, {pin_m} people — {pin_pct} of the population — "
-        f"require humanitarian assistance in {country.hno_year}."
-    )
+    if country.pin is not None and country.pin_share is not None:
+        pin_m = f"{country.pin / 1_000_000:.1f} million"
+        pin_pct = f"{country.pin_share:.0%}"
+        intro = (
+            f"In {country.country}, {pin_m} people — {pin_pct} of the population — "
+            f"require humanitarian assistance in {country.hno_year or country.analysis_year}."
+        )
+    elif country.pin is not None:
+        pin_m = f"{country.pin / 1_000_000:.1f} million"
+        intro = (
+            f"In {country.country}, {pin_m} people require humanitarian assistance in "
+            f"{country.hno_year or country.analysis_year}. Population baseline unavailable; "
+            f"per-capita share is not computed."
+        )
+    else:
+        sev = country.inform_severity
+        sev_str = f"INFORM Severity {sev:.1f}/10" if sev is not None else "INFORM Severity"
+        intro = (
+            f"{country.country} has no published HNO for {country.analysis_year}; "
+            f"need is approximated from {sev_str}."
+        )
     if country.coverage_ratio < 0.30:
         funding = (
             f"Only {country.coverage_ratio:.0%} of the "

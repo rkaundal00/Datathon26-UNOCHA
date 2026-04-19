@@ -3,8 +3,8 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Tabs from "@radix-ui/react-tabs";
 import { useEffect, useState } from "react";
-import type { CoverageResponse, ExcludedCountryRow } from "@/lib/api-types";
-import { EXCLUSION_LABEL } from "@/lib/api-types";
+import type { CoverageResponse, ExcludedCountryRow, InCohortFallbackRow, QAFlag } from "@/lib/api-types";
+import { EXCLUSION_LABEL, QA_FLAG_LABEL } from "@/lib/api-types";
 import { fetchCoverage } from "@/lib/api";
 import { numCompact, usdCompact, percent } from "@/lib/formatters";
 import { QaFlagList } from "@/components/qa-flag";
@@ -55,19 +55,20 @@ export function DataCoverageAnchor({
             <div>
               <Dialog.Title className="text-lg font-semibold">Data coverage</Dialog.Title>
               <Dialog.Description className="text-xs text-text-muted">
-                Countries considered but excluded, and in-cohort rows carrying QA flags.
+                Countries rescued via a fallback rule, in-cohort rows carrying QA flags,
+                and rows that remain excluded.
               </Dialog.Description>
             </div>
             <Dialog.Close className="rounded p-1 text-text-muted hover:bg-surface-2">✕</Dialog.Close>
           </div>
           {data ? (
-            <Tabs.Root defaultValue="excluded" className="mt-3">
+            <Tabs.Root defaultValue="fallback" className="mt-3">
               <Tabs.List className="mb-2 flex gap-2 border-b border-border">
                 <Tabs.Trigger
-                  value="excluded"
+                  value="fallback"
                   className="border-b-2 border-transparent px-3 py-1.5 text-sm data-[state=active]:border-accent data-[state=active]:text-text"
                 >
-                  Excluded ({data.excluded.length})
+                  Included via fallback ({(data.in_cohort_fallback ?? []).length})
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   value="flagged"
@@ -75,7 +76,16 @@ export function DataCoverageAnchor({
                 >
                   In cohort — flagged ({data.in_cohort_flagged.length})
                 </Tabs.Trigger>
+                <Tabs.Trigger
+                  value="excluded"
+                  className="border-b-2 border-transparent px-3 py-1.5 text-sm data-[state=active]:border-accent data-[state=active]:text-text"
+                >
+                  Excluded ({data.excluded.length})
+                </Tabs.Trigger>
               </Tabs.List>
+              <Tabs.Content value="fallback">
+                <FallbackTable rows={data.in_cohort_fallback ?? []} />
+              </Tabs.Content>
               <Tabs.Content value="excluded">
                 <ExcludedTable rows={data.excluded} />
               </Tabs.Content>
@@ -134,6 +144,66 @@ function ExcludedTable({ rows }: { rows: ExcludedCountryRow[] }) {
     </div>
   );
 }
+
+function FallbackTable({ rows }: { rows: InCohortFallbackRow[] }) {
+  if (rows.length === 0) {
+    return (
+      <p className="text-xs text-text-muted">
+        No rows are in cohort via a fallback rule for the current scope.
+      </p>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <p className="text-xs text-text-muted leading-relaxed">
+        These countries failed the strict cohort filter (missing HNO PIN, COD-PS population,
+        or 2026 FTS appeal) but are included by a sanctioned fallback rule. Each row shows
+        which fallback fired and the rescued gap score. See the calibration card §9 for the
+        scoring math.
+      </p>
+      <ul className="text-xs divide-y divide-border rounded border border-border">
+        {rows.map((r) => (
+          <li key={r.iso3} className="flex flex-col gap-1 px-3 py-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col min-w-[220px]">
+              <span>
+                <strong>{r.country}</strong>{" "}
+                <span className="text-text-muted text-[11px]">({r.iso3})</span>
+              </span>
+              <div className="flex gap-2 text-[11px] text-text-muted mt-0.5 flex-wrap">
+                <span title="Rescued gap score">
+                  Score: <span className="text-text">{r.gap_score.toFixed(3)}</span>
+                </span>
+                <span title="Funding Requirements">
+                  Reqs: <span className="text-text">{usdCompact(r.requirements_usd)}</span>
+                </span>
+                <span title="Funding Coverage">
+                  Cov:{" "}
+                  <span className="text-text">
+                    {r.coverage_ratio != null ? percent(r.coverage_ratio) : "—"}
+                  </span>
+                </span>
+                <span title="INFORM Severity">
+                  Severity:{" "}
+                  <span className="text-text">
+                    {r.inform_severity != null ? r.inform_severity.toFixed(1) : "—"}/10
+                  </span>
+                </span>
+              </div>
+            </div>
+            <span className="flex flex-wrap gap-1 sm:justify-end mt-1 sm:mt-0">
+              {r.qa_flags.map((f) => (
+                <Badge key={f} tone="amber" title={QA_FLAG_LABEL[f as QAFlag] ?? f}>
+                  {f}
+                </Badge>
+              ))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 
 function FlaggedTable({ rows }: { rows: { iso3: string; country: string; qa_flags: string[] }[] }) {
   if (rows.length === 0) return <p className="text-xs text-text-muted">No rows in cohort carry non-default flags.</p>;

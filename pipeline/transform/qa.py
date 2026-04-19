@@ -15,6 +15,8 @@ def build_flags(
     hrp_status: str,
     inform_severity: float | None,
     cluster_taxonomy_mismatch: bool = False,
+    fts_year_fallback: bool = False,
+    extra_flags: list[str] | None = None,
 ) -> list[str]:
     """Return the sorted list of QA flag strings for a country row.
 
@@ -49,5 +51,13 @@ def build_flags(
 
     if hrp_status == "Unknown":
         flags.append("hrp_status_unknown")
+
+    if fts_year_fallback:
+        flags.append("fts_year_fallback")
+
+    if extra_flags:
+        for f in extra_flags:
+            if f not in flags:
+                flags.append(f)
 
     return sorted(flags)

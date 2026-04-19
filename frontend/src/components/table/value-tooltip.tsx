@@ -12,12 +12,16 @@ export function PinValueTooltip({
   year,
   children,
 }: {
-  pin: number;
-  year: number;
+  pin: number | null;
+  year: number | null;
   children: React.ReactNode;
 }) {
+  const content =
+    pin != null && year != null
+      ? `${fmtInt(pin)} people (HNO ${year})`
+      : "No HNO row published — need approximated from INFORM Severity";
   return (
-    <Tooltip content={`${fmtInt(pin)} people (HNO ${year})`}>
+    <Tooltip content={content}>
       <span>{children}</span>
     </Tooltip>
   );
@@ -29,15 +33,21 @@ export function PinShareValueTooltip({
   popYear,
   children,
 }: {
-  pin: number;
-  population: number;
-  popYear: number;
+  pin: number | null;
+  population: number | null;
+  popYear: number | null;
   children: React.ReactNode;
 }) {
-  const content =
-    population > 0
-      ? `${fmtInt(pin)} of ${fmtInt(population)} (COD-PS ${popYear})`
-      : `Population baseline unavailable (COD-PS ${popYear})`;
+  let content: string;
+  if (pin != null && population != null && population > 0 && popYear != null) {
+    content = `${fmtInt(pin)} of ${fmtInt(population)} (COD-PS ${popYear})`;
+  } else if (population == null) {
+    content = "No COD-PS population baseline — per-capita share unavailable";
+  } else if (pin == null) {
+    content = "No HNO row — per-capita share unavailable";
+  } else {
+    content = `Population baseline unavailable (COD-PS ${popYear ?? "?"})`;
+  }
   return (
     <Tooltip content={content}>
       <span>{children}</span>
@@ -92,14 +102,18 @@ export function GapScoreValueTooltip({
   children,
 }: {
   coverage: number;
-  pinShare: number;
+  pinShare: number | null;
   gap: number;
   children: React.ReactNode;
 }) {
   const cov = Math.min(coverage, 1);
+  const need =
+    pinShare != null
+      ? `${pinShare.toFixed(3)}`
+      : `severity/10 (need_proxy_inform)`;
   return (
     <Tooltip
-      content={`(1 − ${cov.toFixed(2)}) × ${pinShare.toFixed(2)} = ${gap.toFixed(2)}`}
+      content={`(1 − ${cov.toFixed(2)}) × ${need} = ${gap.toFixed(2)}`}
     >
       <span>{children}</span>
     </Tooltip>

@@ -22,6 +22,7 @@ from pipeline.evaluation.sensitivity import (
     sensitivity_summary,
     sensitivity_sweep,
 )
+from pipeline.transform.country_year import in_cohort_fallback_table
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 DEFAULT_LABEL = f"{DEFAULT_DENOMINATOR}_{DEFAULT_FLOOR // 1_000_000}M"
@@ -73,6 +74,26 @@ def generate_calibration_card(
 
     disagreement = disagreement_cases(analysis_year).to_dicts()
 
+    # Fallback rescue tallies for §9.
+    fallback_rows = in_cohort_fallback_table(analysis_year).to_dicts()
+    counts = {"fts_year_fallback": 0, "need_proxy_inform": 0, "population_unavailable": 0}
+    examples: dict[str, list[str]] = {k: [] for k in counts}
+    for r in fallback_rows:
+        for f in r["qa_flags"]:
+            if f in counts:
+                counts[f] += 1
+                if len(examples[f]) < 6:
+                    examples[f].append(r["iso3"])
+    fallback_ctx = {
+        "fts_year_fallback_count": counts["fts_year_fallback"],
+        "fts_year_fallback_examples": ", ".join(examples["fts_year_fallback"]) or "—",
+        "need_proxy_inform_count": counts["need_proxy_inform"],
+        "need_proxy_inform_examples": ", ".join(examples["need_proxy_inform"]) or "—",
+        "population_unavailable_count": counts["population_unavailable"],
+        "population_unavailable_examples": ", ".join(examples["population_unavailable"]) or "—",
+        "fallback_total": len(fallback_rows),
+    }
+
     default_row = next(r for r in summary_rows if r["is_default"])
     context = {
         "analysis_date": _latest_parquet_mtime().split("T")[0],
@@ -90,6 +111,7 @@ def generate_calibration_card(
         "transitions_out": exits,
         "disagreement": disagreement,
         "data_freshness": _latest_parquet_mtime(),
+        **fallback_ctx,
     }
     text = template.render(**context)
 

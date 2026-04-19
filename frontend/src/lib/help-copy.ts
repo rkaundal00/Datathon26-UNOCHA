@@ -124,6 +124,24 @@ export const FLAG_COPY: Record<
     tooltip:
       "HNO reports people in need for this sector, but FTS shows no matching cluster funding. Coverage is shown as 0% — treat as a potential reporting gap, not a confirmed shortfall.",
   },
+  fts_year_fallback: {
+    label: "FTS prior-year fallback",
+    short: "FTS fallback",
+    tooltip:
+      "Analysis-year FTS requirements are zero, so prior-year requirements, funding, and plan type substitute. Coverage and gap score reflect the prior year.",
+  },
+  need_proxy_inform: {
+    label: "Need proxied from INFORM Severity",
+    short: "INFORM proxy",
+    tooltip:
+      "HNO People-in-Need is unavailable for this row, so gap score uses INFORM Severity (1–10, normalized to 0–1) as the need axis instead of pin_share.",
+  },
+  population_unavailable: {
+    label: "No COD-PS population baseline",
+    short: "no pop",
+    tooltip:
+      "COD-PS has no population reference for this ISO3. Per-capita derivations (pin_share) are not valid for this row; the rescue uses INFORM Severity as the need axis.",
+  },
 };
 
 export const CHRONIC_CLUSTER_TOOLTIP =

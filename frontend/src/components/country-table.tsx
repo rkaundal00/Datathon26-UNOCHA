@@ -157,7 +157,7 @@ export function CountryTable({
                     <td className="px-3 py-2 text-right">
                       <span className="inline-flex items-center">
                         <PinValueTooltip pin={vPin} year={row.hno_year}>
-                          {numCompact(vPin)}
+                          {vPin != null ? numCompact(vPin) : <span className="text-text-muted">—</span>}
                         </PinValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.pin} row={row} />
                       </span>
@@ -170,7 +170,7 @@ export function CountryTable({
                           population={row.population}
                           popYear={row.population_reference_year}
                         >
-                          {percent(vPinShare)}
+                          {vPinShare != null ? percent(vPinShare) : <span className="text-text-muted">—</span>}
                         </PinShareValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.pin_share} row={row} />
                       </span>

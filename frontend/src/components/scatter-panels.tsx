@@ -35,16 +35,19 @@ export function ScatterPanels({
 
   // Use PIN (log scale) as "Level of Need" and INFORM Severity as "Severity Proxy"
   const data = rows
-    .filter((r) => r.pin > 0 && r.inform_severity != null)
-    .map((r) => ({
-      iso3: r.iso3,
-      country: r.country,
-      x: Math.log10(Math.max(1, r.pin)),
-      y: r.inform_severity!,
-      z: Math.max(1, r.unmet_need_usd),
-      pin: r.pin,
-      unmet: r.unmet_need_usd,
-    }));
+    .filter((r) => r.pin != null && r.pin > 0 && r.inform_severity != null)
+    .map((r) => {
+      const pin = r.pin as number;
+      return {
+        iso3: r.iso3,
+        country: r.country,
+        x: Math.log10(Math.max(1, pin)),
+        y: r.inform_severity!,
+        z: Math.max(1, r.unmet_need_usd),
+        pin,
+        unmet: r.unmet_need_usd,
+      };
+    });
 
   // Calculate medians to create dynamic 4-quadrant crosshairs
   const sortedX = [...data].sort((a, b) => a.x - b.x);

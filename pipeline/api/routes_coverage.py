@@ -5,11 +5,12 @@ from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query
 
-from pipeline.api.schemas import CoverageResponse, ExcludedCountryRow
+from pipeline.api.schemas import CoverageResponse, ExcludedCountryRow, InCohortFallbackRow
 from pipeline.api.service import (
     MODE_DEFAULT_SORT,
     SORTABLE_COLUMNS,
     build_excluded_rows,
+    build_fallback_rows,
     build_flagged_rows,
     build_ranking_rows,
     make_meta,
@@ -59,6 +60,24 @@ def get_coverage(
         pin_floor=pin_floor,
         require_hrp=require_hrp,
     )
+    fallback_raw = build_fallback_rows(
+        analysis_year=analysis_year,
+        pin_floor=pin_floor,
+        require_hrp=require_hrp,
+    )
+    fallback = [
+        InCohortFallbackRow(
+            iso3=r["iso3"],
+            country=r["country"],
+            qa_flags=list(r["qa_flags"]),
+            gap_score=float(r["gap_score"]),
+            requirements_usd=int(r.get("requirements_usd") or 0),
+            funding_usd=int(r.get("funding_usd") or 0),
+            coverage_ratio=r.get("coverage_ratio"),
+            inform_severity=r.get("inform_severity"),
+        )
+        for r in fallback_raw
+    ]
     excluded = [
         ExcludedCountryRow(
             iso3=r["iso3"],
@@ -83,4 +102,9 @@ def get_coverage(
         total_count=total,
         excluded_count=excluded_count,
     )
-    return CoverageResponse(meta=meta, excluded=excluded, in_cohort_flagged=flagged)
+    return CoverageResponse(
+        meta=meta,
+        excluded=excluded,
+        in_cohort_flagged=flagged,
+        in_cohort_fallback=fallback,
+    )

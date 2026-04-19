@@ -24,9 +24,9 @@ export function DecompositionRow({
 
 function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
   switch (column) {
-    case "gap_score":
-      {
-        const shortfall = 1 - Math.min(row.coverage_ratio, 1);
+    case "gap_score": {
+      const shortfall = 1 - Math.min(row.coverage_ratio, 1);
+      if (row.pin_share != null && row.pin != null) {
         const logPin = Math.max(0, Math.min(1, (Math.log10(Math.max(row.pin, 1)) - 6) / (8.3 - 6)));
         const need = 0.5 * row.pin_share + 0.5 * logPin;
         return (
@@ -39,17 +39,30 @@ function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
           </span>
         );
       }
+      const sevAxis = row.inform_severity != null ? row.inform_severity / 10 : 0;
+      return (
+        <span>
+          <strong className="text-text">Gap score decomposition (rescued row):</strong>{" "}
+          shortfall × (severity / 10) ={" "}
+          {shortfall.toFixed(3)} × {sevAxis.toFixed(3)} ={" "}
+          <strong className="text-text">{row.gap_score.toFixed(3)}</strong>
+          {" "}— need axis from INFORM Severity (need_proxy_inform); HNO PIN unavailable.
+        </span>
+      );
+    }
     case "custom_gap_score": {
       if (row.custom_gap_score == null || meta.weights == null) {
         return <span>Custom weights are not active for this row.</span>;
       }
       const covGap = 1 - Math.min(row.coverage_ratio, 1);
       const chrNorm = row.chronic_years / 5;
+      const needAxis =
+        row.pin_share ?? (row.inform_severity != null ? row.inform_severity / 10 : 0);
       return (
         <span>
           <strong className="text-text">Custom composite:</strong>{" "}
           {meta.weights.w_coverage.toFixed(2)} × {covGap.toFixed(2)} +{" "}
-          {meta.weights.w_pin.toFixed(2)} × {row.pin_share.toFixed(2)} +{" "}
+          {meta.weights.w_pin.toFixed(2)} × {needAxis.toFixed(2)} +{" "}
           {meta.weights.w_chronic.toFixed(2)} × {chrNorm.toFixed(2)} ={" "}
           <strong className="text-text">{row.custom_gap_score.toFixed(2)}</strong>
         </span>
@@ -69,6 +82,15 @@ function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
         </span>
       );
     case "pin_share":
+      if (row.pin == null || row.population == null || row.pin_share == null) {
+        return (
+          <span>
+            <strong className="text-text">PIN share unavailable:</strong>{" "}
+            {row.pin == null ? "no HNO row" : "no COD-PS population baseline"}.
+            Need axis falls back to INFORM Severity ({row.inform_severity != null ? `${row.inform_severity.toFixed(1)}/10` : "n/a"}).
+          </span>
+        );
+      }
       return (
         <span>
           <strong className="text-text">PIN share decomposition:</strong>{" "}

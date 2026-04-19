@@ -15,6 +15,9 @@ const TONE: Record<QAFlag, BadgeTone> = {
   preliminary_hno: "amber",
   hrp_status_unknown: "amber",
   cluster_funding_missing: "amber",
+  fts_year_fallback: "amber",
+  need_proxy_inform: "amber",
+  population_unavailable: "amber",
 };
 
 export function QaFlagList({
