@@ -17,7 +17,7 @@ export const PALETTE = {
 
 const SEQ_ANCHORS = [PALETTE.teal0, PALETTE.teal1, PALETTE.teal2, PALETTE.rose1, PALETTE.rose2];
 
-const gapColor = scaleSequential(interpolateRgbBasis(SEQ_ANCHORS)).domain([0, 1]).clamp(true);
+const gapColor = scaleSequential(interpolateRgbBasis(SEQ_ANCHORS)).domain([0, 4]).clamp(true);
 const pinShareColor = scaleSequential(interpolateRgbBasis(SEQ_ANCHORS)).domain([0, 0.25]).clamp(true);
 const chronicColor = scaleSequential(interpolateRgbBasis(SEQ_ANCHORS)).domain([0, 5]).clamp(true);
 
@@ -88,8 +88,8 @@ export function legendStopsFor(metric: MapMetric): {
     case "gap_score":
       return {
         kind: "sequential",
-        domain: [0, 1],
-        stops: [0, 0.25, 0.5, 0.75, 1].map((t) => ({ offset: t, color: gapColor(t) })),
+        domain: [0, 4],
+        stops: [0, 1, 2, 3, 4].map((t) => ({ offset: t / 4, color: gapColor(t) })),
       };
     case "pin_share":
       return {

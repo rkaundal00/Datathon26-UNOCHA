@@ -168,7 +168,7 @@ def _row_to_country(
         if pin_share_raw is not None
         else None
     )
-    gap = max(0.0, min(1.0, _clean_number(row["gap_score"])))
+    gap = max(0.0, _clean_number(row["gap_score"]))
     coverage = _clean_number(row["coverage_ratio"])
     chronic = int(row["chronic_years"] or 0)
 

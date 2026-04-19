@@ -11,11 +11,12 @@ export function ScoreBar({
   value: number;
   className?: string;
 }) {
-  const pct = Math.max(0, Math.min(1, value));
+  const max = 4.0;
+  const pct = Math.max(0, Math.min(1, value / max));
   const color =
-    pct >= 0.4
+    value >= 2.0
       ? "bg-[color:var(--color-score-high)]"
-      : pct >= 0.2
+      : value >= 1.0
         ? "bg-[color:var(--color-score-mid)]"
         : "bg-[color:var(--color-score-low)]";
   return (

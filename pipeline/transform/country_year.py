@@ -7,7 +7,7 @@ from functools import lru_cache
 import polars as pl
 
 from pipeline.compute.chronic import chronic_years
-from pipeline.compute.composites import coverage_gap, gap_score, _LOG_PIN_MIN, _LOG_PIN_MAX
+from pipeline.compute.composites import coverage_gap, gap_score
 from pipeline.compute.donor_hhi import donor_concentration_table
 from pipeline.config import (
     DEFAULT_ANALYSIS_YEAR,
@@ -316,7 +316,7 @@ def build_country_year_table(
         # severity-based proxy for rescued rows missing pin or population.
         cov_clipped = max(min(cov, 1.0), 0.0)
         if r["pin_share"] is not None and pin is not None:
-            log_pin = max(0.0, min(1.0, (math.log10(max(pin, 1)) - _LOG_PIN_MIN) / (_LOG_PIN_MAX - _LOG_PIN_MIN)))
+            log_pin = 0.0 if pin <= 0 else math.log10(max(pin, 1))
             need_axis = 0.5 * max(min(r["pin_share"], 1.0), 0.0) + 0.5 * log_pin
         elif sev is not None:
             need_axis = max(min(sev / 10.0, 1.0), 0.0)

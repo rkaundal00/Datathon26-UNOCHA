@@ -98,23 +98,24 @@ export function UnmetValueTooltip({
 export function GapScoreValueTooltip({
   coverage,
   pinShare,
+  pin,
   gap,
   children,
 }: {
   coverage: number;
   pinShare: number | null;
+  pin: number | null;
   gap: number;
   children: React.ReactNode;
 }) {
   const cov = Math.min(coverage, 1);
-  const need =
-    pinShare != null
-      ? `${pinShare.toFixed(3)}`
-      : `severity/10 (need_proxy_inform)`;
+  let content = `(1 − ${cov.toFixed(2)}) × severity/10 = ${gap.toFixed(2)}`;
+  if (pinShare != null && pin != null) {
+    const logPin = pin <= 0 ? 0 : Math.log10(Math.max(pin, 1));
+    content = `(1 − ${cov.toFixed(2)}) × (0.5 × ${pinShare.toFixed(2)} + 0.5 × ${logPin.toFixed(2)}) = ${gap.toFixed(2)}`;
+  }
   return (
-    <Tooltip
-      content={`(1 − ${cov.toFixed(2)}) × ${need} = ${gap.toFixed(2)}`}
-    >
+    <Tooltip content={content}>
       <span>{children}</span>
     </Tooltip>
   );

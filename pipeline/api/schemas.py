@@ -47,7 +47,7 @@ class SectorProjection(BaseModel):
     cluster_funding_usd: int
     cluster_coverage_ratio: float  # raw, uncapped
     cluster_unmet_need_usd: int
-    cluster_gap_score: float = Field(..., ge=0.0, le=1.0)
+    cluster_gap_score: float = Field(..., ge=0.0)
     qa_flags: list[QAFlag]
 
 
@@ -63,7 +63,7 @@ class CountryRow(BaseModel):
     funding_usd: int
     coverage_ratio: float  # raw, uncapped
     unmet_need_usd: int
-    gap_score: float = Field(..., ge=0.0, le=1.0)
+    gap_score: float = Field(..., ge=0.0)
     custom_gap_score: float | None = None
     chronic_years: int
     inform_severity: float | None = Field(..., ge=0, le=10)

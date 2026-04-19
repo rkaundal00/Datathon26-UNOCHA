@@ -213,6 +213,7 @@ export function CountryTable({
                         <GapScoreValueTooltip
                           coverage={vCoverage}
                           pinShare={vPinShare}
+                          pin={vPin}
                           gap={vGap}
                         >
                           <div className={cn("flex flex-col items-end gap-1", COLUMN_META.gap_score.tier(row) === "imputed" && "text-amber-700/80 dark:text-amber-300/80")}>

@@ -8,7 +8,7 @@ export const HEADER_SUBTITLE: Record<ColumnKey, string> = {
   pin_share: "% of national pop.",
   coverage_ratio: "Funded ÷ Requested",
   unmet_need_usd: "Requested − Funded (USD)",
-  gap_score: "Ranking heuristic, 0–1",
+  gap_score: "Ranking heuristic",
   custom_gap_score: "User-weighted, 0–1",
   chronic_years: "Years of underfunding",
   hrp_status: "Appeal type",

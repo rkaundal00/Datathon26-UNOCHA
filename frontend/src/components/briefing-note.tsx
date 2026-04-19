@@ -71,7 +71,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         />
         <Fact label="Funding gap" value={usdCompact(fact.unmet_need_usd)} />
         <Fact
-          label="Years of underfunding"
+          label="Chronic underfunding"
           value={
             <span className="inline-flex items-center gap-1">
               <ChronicDots value={fact.chronic_years} />
@@ -124,10 +124,13 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
                 <span className="tabular">{(1 - Math.min(country.coverage_ratio, 1)).toFixed(2)}</span>
               </li>
               <li className="flex justify-between items-center gap-4">
-                <span>× {country.pin_share != null ? "Share of global need (PIN share)" : "Need proxy (INFORM severity / 10)"}</span>
+                <span>× {country.pin_share != null ? "Need proxy (0.5 × PIN Share + 0.5 × log₁₀(PIN))" : "Need proxy (INFORM severity / 10)"}</span>
                 <span className="tabular">
-                  {country.pin_share != null
-                    ? country.pin_share.toFixed(2)
+                  {country.pin_share != null && country.pin != null
+                    ? (
+                        0.5 * country.pin_share +
+                        0.5 * (country.pin <= 0 ? 0 : Math.log10(Math.max(country.pin, 1)))
+                      ).toFixed(2)
                     : ((country.inform_severity ?? 0) / 10).toFixed(2)}
                 </span>
               </li>
