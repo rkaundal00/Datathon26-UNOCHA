@@ -159,10 +159,10 @@ export const COLUMN_META: Record<ColumnKey, ColumnMeta> = {
         ? "imputed"
         : "derived",
     popover: {
-      what: "Composite ranking score in [0, 1]. High means high need AND severe underfunding. Zero if either input is zero — multiplicative, not additive.",
-      how: "gap_score = (1 − min(coverage_ratio, 1)) × pin_share",
-      source: "Derived from Coverage and PIN share.",
-      whyItMatters: "Default ranking signal. Reads as 'fraction of population affected × fraction of appeal unfunded'. Click any Gap score cell to see the decomposition.",
+      what: "Composite ranking score. High means high need AND severe underfunding. Blends relative intensity (PIN share) with absolute scale (log PIN) so large crises aren't artificially depressed.",
+      how: "gap_score = (1 − min(coverage, 1)) × (0.5 × pin_share + 0.5 × norm_log₁₀(pin))",
+      source: "Derived from Coverage, PIN share, and PIN.",
+      whyItMatters: "Default ranking signal. A 50/50 blend of relative and absolute need, weighted by funding shortfall. Click any Gap score cell to see the decomposition.",
     },
     decomposable: true,
     thresholdable: false,

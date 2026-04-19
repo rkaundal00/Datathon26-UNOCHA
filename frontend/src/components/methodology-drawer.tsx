@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { COLUMN_META } from "@/lib/columns";
@@ -45,7 +46,7 @@ export function MethodologyButton() {
         <BookOpen className="size-3.5" aria-hidden />
         Methodology
       </button>
-      {open && <MethodologyDrawer onClose={() => setOpen(false)} />}
+      {open && createPortal(<MethodologyDrawer onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }
@@ -56,7 +57,7 @@ function MethodologyDrawer({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="Methodology"
-      className="fixed inset-0 z-50 flex justify-end"
+      className="fixed inset-0 z-[100] flex items-center justify-center"
     >
       <button
         aria-label="Close methodology"
@@ -65,8 +66,8 @@ function MethodologyDrawer({ onClose }: { onClose: () => void }) {
       />
       <aside
         className={cn(
-          "relative flex h-full w-full max-w-xl flex-col overflow-hidden",
-          "border-l border-border bg-surface shadow-2xl",
+          "relative flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-lg",
+          "border border-border bg-surface shadow-2xl",
         )}
       >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">

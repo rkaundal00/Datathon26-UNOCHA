@@ -1,17 +1,37 @@
 """Composite scores — default (multiplicative) and custom (linear)."""
 from __future__ import annotations
 
+import math
 
-def gap_score(coverage_ratio: float, pin_share: float) -> float:
-    """(1 − min(coverage, 1)) × pin_share, in [0, 1].
+# Fixed bounds for log10(PIN) normalization.
+# PIN floor is 1 000 000 → log10 = 6.  Practical ceiling ≈ 200 000 000 → log10 ≈ 8.3.
+_LOG_PIN_MIN = 6.0   # log10(1_000_000)
+_LOG_PIN_MAX = 8.3   # log10(~200_000_000)
 
-    Either factor zero → score zero. Overfunded (>100%) clips to 0 on the coverage side
-    inside the score; the raw coverage_ratio column stays uncapped upstream.
+
+def _norm_log_pin(pin: int | float) -> float:
+    """Normalize log10(pin) to [0, 1] using fixed bounds."""
+    if pin <= 0:
+        return 0.0
+    v = math.log10(max(pin, 1))
+    return max(0.0, min(1.0, (v - _LOG_PIN_MIN) / (_LOG_PIN_MAX - _LOG_PIN_MIN)))
+
+
+def gap_score(coverage_ratio: float, pin_share: float, pin: int | float) -> float:
+    """Funding-shortfall % × blended need signal.
+
+    need_signal = 0.5 × pin_share  (relative intensity)
+                + 0.5 × norm_log10(pin)  (absolute scale, log-dampened)
+
+    A small country with extreme PIN share is prioritised, but a massive country
+    with millions in need isn't artificially pushed to the bottom.
     """
-    cov = max(coverage_ratio, 0.0)
-    cov = min(cov, 1.0)
-    share = max(min(pin_share, 1.0), 0.0)
-    return (1.0 - cov) * share
+    cov = max(0.0, min(coverage_ratio, 1.0))
+    shortfall = 1.0 - cov
+    share = max(0.0, min(pin_share, 1.0))
+    log_pin = _norm_log_pin(pin)
+    need = 0.5 * share + 0.5 * log_pin
+    return shortfall * need
 
 
 def custom_gap_score(

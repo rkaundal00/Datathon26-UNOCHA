@@ -25,14 +25,20 @@ export function DecompositionRow({
 function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
   switch (column) {
     case "gap_score":
-      return (
-        <span>
-          <strong className="text-text">Gap score decomposition:</strong>{" "}
-          (1 − min(coverage, 1)) × pin_share ={" "}
-          (1 − {Math.min(row.coverage_ratio, 1).toFixed(3)}) × {row.pin_share.toFixed(3)} ={" "}
-          <strong className="text-text">{row.gap_score.toFixed(3)}</strong>
-        </span>
-      );
+      {
+        const shortfall = 1 - Math.min(row.coverage_ratio, 1);
+        const logPin = Math.max(0, Math.min(1, (Math.log10(Math.max(row.pin, 1)) - 6) / (8.3 - 6)));
+        const need = 0.5 * row.pin_share + 0.5 * logPin;
+        return (
+          <span>
+            <strong className="text-text">Gap score decomposition:</strong>{" "}
+            shortfall × (0.5 × pin_share + 0.5 × log_pin) ={" "}
+            {shortfall.toFixed(3)} × (0.5 × {row.pin_share.toFixed(3)} + 0.5 × {logPin.toFixed(3)}) ={" "}
+            {shortfall.toFixed(3)} × {need.toFixed(3)} ={" "}
+            <strong className="text-text">{row.gap_score.toFixed(3)}</strong>
+          </span>
+        );
+      }
     case "custom_gap_score": {
       if (row.custom_gap_score == null || meta.weights == null) {
         return <span>Custom weights are not active for this row.</span>;

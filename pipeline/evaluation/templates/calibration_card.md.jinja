@@ -1,6 +1,6 @@
 # Geo-Insight calibration card — {{ analysis_date }}
 
-**What this card claims.** The default composite `gap_score = (1 − min(coverage, 1)) × pin_share`
+**What this card claims.** The default composite `gap_score = (1 − min(coverage, 1)) × (0.5 × pin_share + 0.5 × norm_log10(pin))`
 is stable under reasonable denominator and cohort-floor variations, and does meaningful
 ranking work above its components alone. It is not a claim of ground-truth "correctness."
 

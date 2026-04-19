@@ -6,7 +6,7 @@ from functools import lru_cache
 import polars as pl
 
 from pipeline.compute.chronic import chronic_years
-from pipeline.compute.composites import coverage_gap, gap_score
+from pipeline.compute.composites import coverage_gap, gap_score, _LOG_PIN_MIN, _LOG_PIN_MAX
 from pipeline.compute.donor_hhi import donor_concentration_table
 from pipeline.config import (
     DEFAULT_ANALYSIS_YEAR,
@@ -135,11 +135,17 @@ def build_country_year_table(
         .otherwise(0.0)
         .alias("unmet_need_usd"),
     ).with_columns(
+        # Normalized log10(PIN) for the blended need signal.
+        (
+            (pl.col("pin").cast(pl.Float64).log(10) - _LOG_PIN_MIN)
+            / (_LOG_PIN_MAX - _LOG_PIN_MIN)
+        ).clip(0.0, 1.0).alias("_norm_log_pin"),
+    ).with_columns(
         (
             (1.0 - pl.min_horizontal([pl.col("coverage_ratio"), pl.lit(1.0)]))
-            * pl.col("pin_share")
+            * (0.5 * pl.col("pin_share") + 0.5 * pl.col("_norm_log_pin"))
         ).alias("gap_score"),
-    )
+    ).drop("_norm_log_pin")
 
     # chronic_years per country.
     chronic_col = pl.Series(

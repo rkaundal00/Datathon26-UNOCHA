@@ -4,6 +4,7 @@ from __future__ import annotations
 import polars as pl
 
 from pipeline.compute.chronic import chronic_years
+from pipeline.compute.composites import _LOG_PIN_MIN, _LOG_PIN_MAX
 from pipeline.ingest.cod_ps import country_names, load_admin0
 from pipeline.ingest.fts import appeals_country_year, hrp_status_table, load_appeals
 from pipeline.ingest.hno import country_level_pin_table, load_hno
@@ -77,10 +78,15 @@ def _rank_under_denominator(
         (pl.col("funding_usd") / pl.col("requirements_usd")).alias("coverage_ratio"),
     ).with_columns(
         (
+            (pl.col("pin_like").cast(pl.Float64).log(10) - _LOG_PIN_MIN)
+            / (_LOG_PIN_MAX - _LOG_PIN_MIN)
+        ).clip(0.0, 1.0).alias("_norm_log_pin"),
+    ).with_columns(
+        (
             (1.0 - pl.min_horizontal([pl.col("coverage_ratio"), pl.lit(1.0)]))
-            * pl.col("pin_share")
+            * (0.5 * pl.col("pin_share") + 0.5 * pl.col("_norm_log_pin"))
         ).alias("gap_score"),
-    )
+    ).drop("_norm_log_pin")
     df = df.sort("gap_score", descending=True).with_row_index("rank", offset=1)
     return df.select(
         pl.col("iso3"),
