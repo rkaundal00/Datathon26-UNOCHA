@@ -15,6 +15,21 @@
   --flag-red: #f43f5e;
   --flag-amber: #f59e0b;
   --flag-neutral: #64748b;
+
+  /* Map palette (muted teal → deep rose) */
+  --map-teal-0: #e8f1ef;
+  --map-teal-1: #a8cdc7;
+  --map-teal-2: #6fa7a0;
+  --map-teal-3: #3c6b64;
+  --map-rose-1: #9b6b78;
+  --map-rose-2: #8a3d54;
+  --map-cream: #f4ede3;
+  --map-excluded: #e5e4e2;
+  --map-hairline: rgba(255, 255, 255, 0.55);
+  --map-hairline-excl: rgba(100, 100, 100, 0.18);
+  --tooltip-bg: rgba(255, 255, 255, 0.78);
+  --tooltip-border: rgba(228, 228, 231, 0.6);
+  --tooltip-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,6 +48,15 @@
     --flag-red: #fb7185;
     --flag-amber: #fbbf24;
     --flag-neutral: #94a3b8;
+
+    /* Map palette adjustments for dark mode */
+    --map-teal-0: #1e2a2a;
+    --map-excluded: #2a2a2e;
+    --map-hairline: rgba(255, 255, 255, 0.08);
+    --map-hairline-excl: rgba(255, 255, 255, 0.04);
+    --tooltip-bg: rgba(24, 24, 27, 0.82);
+    --tooltip-border: rgba(63, 63, 70, 0.6);
+    --tooltip-shadow: 0 2px 12px -4px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -53,6 +77,14 @@
   --color-flag-neutral: var(--flag-neutral);
   --font-sans: -apple-system, "Segoe UI", "Inter", system-ui, sans-serif;
   --font-mono: "SF Mono", ui-monospace, Menlo, monospace;
+  --color-map-excluded: var(--map-excluded);
+  --color-map-teal-0: var(--map-teal-0);
+  --color-map-teal-1: var(--map-teal-1);
+  --color-map-teal-2: var(--map-teal-2);
+  --color-map-teal-3: var(--map-teal-3);
+  --color-map-rose-1: var(--map-rose-1);
+  --color-map-rose-2: var(--map-rose-2);
+  --color-map-cream: var(--map-cream);
 }
 
 body {
@@ -124,6 +156,96 @@ a:focus-visible,
 input:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Leaflet overrides — keep the premium aesthetic */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--surface-2);
+}
+.leaflet-container a {
+  color: var(--text-muted);
+}
+.leaflet-control-attribution {
+  background: var(--tooltip-bg) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 6px;
+  padding: 2px 8px !important;
+  margin: 6px !important;
+  font-size: 10px !important;
+  color: var(--text-muted) !important;
+  box-shadow: var(--tooltip-shadow);
+}
+.leaflet-control-attribution a {
+  color: var(--text) !important;
+}
+.leaflet-interactive {
+  outline: none !important;
+  cursor: pointer;
+}
+.leaflet-interactive:focus {
+  outline: none !important;
+}
+
+/* Continent labels rendered by us (English only) */
+.continent-label {
+  background: transparent !important;
+  border: none !important;
+  pointer-events: none;
+  overflow: visible !important;
+}
+.continent-label > span {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(60, 107, 100, 0.55);
+  white-space: nowrap;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.9),
+    0 0 4px rgba(255, 255, 255, 0.9);
+  user-select: none;
+}
+
+/* Per-country labels — rendered when zoomed in */
+.country-label-marker {
+  background: transparent !important;
+  border: none !important;
+  pointer-events: none;
+  overflow: visible !important;
+}
+.country-label-marker > span {
+  display: inline-block;
+  transform: translate(-50%, -50%);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px var(--surface),
+    0 0 3px var(--surface),
+    0 1px 2px rgba(255, 255, 255, 0.9);
+  user-select: none;
+}
+@media (prefers-color-scheme: dark) {
+  .country-label-marker > span {
+    text-shadow:
+      0 0 3px rgba(0, 0, 0, 0.85),
+      0 0 3px rgba(0, 0, 0, 0.85),
+      0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .continent-label > span {
+    color: rgba(168, 205, 199, 0.55);
+    text-shadow:
+      0 0 6px rgba(0, 0, 0, 0.7),
+      0 0 4px rgba(0, 0, 0, 0.7);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

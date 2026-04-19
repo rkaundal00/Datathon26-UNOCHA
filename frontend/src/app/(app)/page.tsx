@@ -32,20 +32,15 @@ export default async function Page(props: {
   return (
     <>
       <KeyboardShortcuts />
-      <header className="sticky top-0 z-30 border-b border-border bg-bg/95 backdrop-blur">
+      <header className="border-b border-border bg-bg/95 backdrop-blur">
         <div className="mx-auto max-w-[1440px] px-4 py-3">
           <div className="flex items-center justify-between pb-2">
-            <h1 className="text-lg font-bold">
-              CrisisCompass <span className="text-text-muted font-normal">· makes every human life count</span>
-            </h1>
+            <ScopeBanner meta={ranking.meta} />
             <div className="flex items-center gap-2">
               <ModeToggleBar value={urlState.mode} />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <ScopeBanner meta={ranking.meta} />
-          </div>
-          <div className="pt-2 flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-3 text-xs">
             <DataCoverageAnchor params={apiParams} excludedCount={ranking.meta.excluded_count} />
             <MethodologyButton />
             <span className="text-text-muted">Press ? for keyboard shortcuts</span>

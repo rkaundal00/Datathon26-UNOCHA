@@ -6,6 +6,23 @@ const MODE_DEFAULT_SORT: Record<Mode, { sort: string; dir: SortDir }> = {
   combined: { sort: "gap_score", dir: "desc" },
 };
 
+export type MapMetric =
+  | "gap_score"
+  | "coverage_ratio"
+  | "pin"
+  | "pin_share"
+  | "chronic_years"
+  | "hrp_status";
+
+export const MAP_METRICS: readonly MapMetric[] = [
+  "gap_score",
+  "coverage_ratio",
+  "pin",
+  "pin_share",
+  "chronic_years",
+  "hrp_status",
+] as const;
+
 export interface UrlState {
   year: AnalysisYear;
   pinFloor: number;
@@ -18,6 +35,7 @@ export interface UrlState {
   focus: string | null;
   detail: "clusters" | "trend" | "population" | null;
   flags: string[];
+  metric: MapMetric;
 }
 
 type SearchParamValue = string | string[] | undefined;
@@ -67,6 +85,7 @@ export function parseUrlState(
       | "population"
       | null || null,
     flags,
+    metric: asEnum(first(raw.metric), MAP_METRICS, "gap_score"),
   };
 }
 

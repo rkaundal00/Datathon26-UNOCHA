@@ -5,7 +5,7 @@ import { numCompact, percent, usdCompact } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { ChronicDots } from "@/components/ui/score-bar";
 import { QaFlagList } from "@/components/qa-flag";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { mergeUrl } from "@/lib/url-state";
 import { ChartLine, Network, Users } from "lucide-react";
 
@@ -13,13 +13,14 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
   const { country, briefing } = detail;
   const fact = briefing.fact_sheet;
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   function openDetail(tab: string) {
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
       detail: tab,
     });
-    router.replace(`/?${qs}`, { scroll: false });
+    router.replace(`${pathname}?${qs}`, { scroll: false });
   }
 
   return (
