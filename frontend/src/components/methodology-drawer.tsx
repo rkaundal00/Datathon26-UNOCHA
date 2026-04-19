@@ -187,7 +187,6 @@ function MethodologyDrawer({ onClose }: { onClose: () => void }) {
 
           <Section title="Known limitations">
             <ul className="list-disc space-y-1 pl-4 text-xs text-text-muted">
-              <li>No severity data in HNO for the MVP — every row carries the <code className="font-mono">severity_unavailable</code> flag (hidden from the flag column by default).</li>
               <li>Donor HHI is 2026-only; pre-2026 transaction data is not in the dataset.</li>
               <li>Names vary across sources — all joins are on ISO3 / P-codes, never names.</li>
               <li>FTS typeName is ~32% populated; Unknown is the fallback when requirements exist but no type is declared.</li>

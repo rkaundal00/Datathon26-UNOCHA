@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
   Legend,

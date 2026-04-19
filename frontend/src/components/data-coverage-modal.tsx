@@ -29,6 +29,7 @@ export function DataCoverageAnchor({
     // We fetch whenever the modal opens or params meaningfully change.
     // If we already have data, we might not refetch unless params changed since last time,
     // but the simplest safe fix is refetching unconditionally on param change IF open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     fetchCoverage(params)
       .then(setData)
       .catch((e) => {

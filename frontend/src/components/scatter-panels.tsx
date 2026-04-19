@@ -13,7 +13,7 @@ import {
   ZAxis,
 } from "recharts";
 import type { CountryRow } from "@/lib/api-types";
-import { numCompact, percent, usdCompact } from "@/lib/formatters";
+import { numCompact, usdCompact } from "@/lib/formatters";
 import { mergeUrl } from "@/lib/url-state";
 
 export function ScatterPanels({

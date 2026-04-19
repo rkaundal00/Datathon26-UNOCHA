@@ -132,7 +132,7 @@ export function formatMetricValue(metric: MapMetric, row: MapRow): string {
   const v = metricValue(row, metric);
   switch (metric) {
     case "gap_score":
-      return (v ?? 0).toFixed(3);
+      return (row.gap_score ?? 0).toFixed(2);
     case "coverage_ratio":
       return `${((v ?? 0) * 100).toFixed(0)}%`;
     case "pin":

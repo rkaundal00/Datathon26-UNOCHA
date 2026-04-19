@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Tabs from "@radix-ui/react-tabs";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CountryDetailResponse, DetailTab } from "@/lib/api-types";
 import { fetchCountry } from "@/lib/api";
@@ -20,14 +20,10 @@ export function CountryDetailSheet({
   params: Parameters<typeof fetchCountry>[1];
 }) {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [open, setOpen] = useState(Boolean(focusIso && openTab));
   const [data, setData] = useState<CountryDetailResponse | null>(null);
 
-  useEffect(() => {
-    setOpen(Boolean(focusIso && openTab));
-  }, [focusIso, openTab]);
+  const open = Boolean(focusIso && openTab);
 
   const paramsKey = JSON.stringify(params);
 
@@ -43,27 +39,26 @@ export function CountryDetailSheet({
   }, [focusIso, openTab, paramsKey]);
 
   function close() {
-    setOpen(false);
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
       detail: null,
     });
-    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+    router.replace(`/?${qs}`, { scroll: false });
   }
 
   function setTab(tab: DetailTab) {
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
       detail: tab,
     });
-    router.replace(`${pathname}?${qs}`, { scroll: false });
+    router.replace(`/?${qs}`, { scroll: false });
   }
 
   if (!focusIso) return null;
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => (o ? setOpen(true) : close())}>
+    <Dialog.Root open={open} onOpenChange={(o) => (!o && close())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[1100] bg-black/40" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[1101] max-h-[80vh] w-[min(960px,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-4 shadow-xl overflow-auto">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
+        <Dialog.Content className="fixed left-1/2 bottom-0 z-50 h-[80vh] w-[min(960px,calc(100%-2rem))] -translate-x-1/2 rounded-t-lg border border-border bg-surface p-4 shadow-xl overflow-auto">
           <div className="flex items-start justify-between">
             <div>
               <Dialog.Title className="text-lg font-semibold">

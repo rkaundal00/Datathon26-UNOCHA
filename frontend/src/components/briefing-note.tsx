@@ -2,12 +2,13 @@
 
 import type { CountryDetailResponse } from "@/lib/api-types";
 import { numCompact, percent, usdCompact } from "@/lib/formatters";
-import { Badge } from "@/components/ui/badge";
 import { ChronicDots } from "@/components/ui/score-bar";
 import { QaFlagList } from "@/components/qa-flag";
+import { PLAN_COPY } from "@/lib/help-copy";
+import { cn } from "@/lib/cn";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { mergeUrl } from "@/lib/url-state";
-import { ChartLine, Network, Users } from "lucide-react";
+import { AlertTriangle, ChartLine } from "lucide-react";
 
 export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
   const { country, briefing } = detail;
@@ -74,7 +75,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
             <div className="text-text-muted uppercase tracking-wider text-[10px]">
               Top donors by commitment (HHI)
             </div>
-            <div className="font-semibold">{fact.donor_concentration.toFixed(3)}</div>
+            <div className="font-semibold">{fact.donor_concentration.toFixed(2)}</div>
             <div className="text-[11px] text-text-muted">
               HHI over all pledged, committed, and paid contributions — 2026 only.
             </div>
@@ -85,6 +86,20 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         )}
         <Fact label="Population" value={`${numCompact(fact.pin / fact.pin_share)} (${country.population_reference_year})`} />
         <Fact label="HNO year" value={String(fact.hno_year)} />
+        
+        <Fact 
+          label="Plan Type" 
+          value={
+            <span className="inline-flex items-center gap-1">
+              {country.hrp_status !== "HRP" && country.hrp_status !== "FlashAppeal" && country.hrp_status !== "RegionalRP" && (
+                <AlertTriangle className="size-3 text-rose-500" />
+              )}
+              <span className={country.hrp_status !== "HRP" && country.hrp_status !== "FlashAppeal" && country.hrp_status !== "RegionalRP" ? "text-rose-600 font-bold dark:text-rose-400 max-w-full truncate" : "max-w-full truncate"}>
+                {PLAN_COPY[country.hrp_status].short}
+              </span>
+            </span>
+          } 
+        />
       </dl>
 
       <div>
@@ -95,15 +110,18 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
             <ul className="text-text-muted space-y-1">
               <li className="flex justify-between items-center gap-4">
                 <span>Funding shortfall (100% - coverage)</span>
-                <span className="tabular">{(1 - Math.min(country.coverage_ratio, 1)).toFixed(3)}</span>
+                <span className="tabular">{(1 - Math.min(country.coverage_ratio, 1)).toFixed(2)}</span>
               </li>
               <li className="flex justify-between items-center gap-4">
                 <span>× Share of global need (PIN share)</span>
-                <span className="tabular">{country.pin_share.toFixed(3)}</span>
+                <span className="tabular">{country.pin_share.toFixed(2)}</span>
               </li>
-              <li className="flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border">
+              <li className={cn("flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border", country.qa_flags.includes("funding_imputed_zero") || country.qa_flags.includes("population_stale") ? "text-amber-700/80 dark:text-amber-300/80" : "")}>
                 <span>Resulting Score</span>
-                <span className="tabular">{country.gap_score.toFixed(3)}</span>
+                <span className="tabular">
+                  {(country.qa_flags.includes("funding_imputed_zero") || country.qa_flags.includes("population_stale")) && "~ "}
+                  {country.gap_score.toFixed(2)}
+                </span>
               </li>
             </ul>
           </div>
@@ -113,19 +131,22 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
               <ul className="text-text-muted space-y-1">
                 <li className="flex justify-between items-center gap-4">
                   <span>Coverage gap (weight: {detail.meta.weights.w_coverage.toFixed(2)})</span>
-                  <span className="tabular">{(detail.meta.weights.w_coverage * (1 - Math.min(country.coverage_ratio, 1))).toFixed(3)}</span>
+                  <span className="tabular">{(detail.meta.weights.w_coverage * (1 - Math.min(country.coverage_ratio, 1))).toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between items-center gap-4">
                   <span>+ Needs scale (weight: {detail.meta.weights.w_pin.toFixed(2)})</span>
-                  <span className="tabular">{(detail.meta.weights.w_pin * country.pin_share).toFixed(3)}</span>
+                  <span className="tabular">{(detail.meta.weights.w_pin * country.pin_share).toFixed(2)}</span>
                 </li>
                 <li className="flex justify-between items-center gap-4">
                   <span>+ Chronic neglect (weight: {detail.meta.weights.w_chronic.toFixed(2)})</span>
-                  <span className="tabular">{(detail.meta.weights.w_chronic * (fact.chronic_years / 5)).toFixed(3)}</span>
+                  <span className="tabular">{(detail.meta.weights.w_chronic * (fact.chronic_years / 5)).toFixed(2)}</span>
                 </li>
-                <li className="flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border">
+                <li className={cn("flex justify-between items-center gap-4 font-semibold text-text pt-1 mt-1 border-t border-border", country.qa_flags.includes("funding_imputed_zero") || country.qa_flags.includes("population_stale") ? "text-amber-700/80 dark:text-amber-300/80" : "")}>
                   <span>Resulting Score</span>
-                  <span className="tabular">{country.custom_gap_score.toFixed(3)}</span>
+                  <span className="tabular">
+                    {(country.qa_flags.includes("funding_imputed_zero") || country.qa_flags.includes("population_stale")) && "~ "}
+                    {country.custom_gap_score.toFixed(2)}
+                  </span>
                 </li>
               </ul>
             </div>
@@ -135,7 +156,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
 
       {briefing.qualifiers.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Qualifiers</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">Caveats</h3>
           <ul className="text-xs mt-1 space-y-1 list-disc pl-5 text-text-muted">
             {briefing.qualifiers.map((q, i) => (
               <li key={i}>{q}</li>

@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { RankingMeta } from "@/lib/api-types";
-import { dataFreshnessAgo } from "@/lib/formatters";
 import { exportCsvHref } from "@/lib/api";
 import type { RankingParams } from "@/lib/api";
 
 export function Footer({
   meta,
   params,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   calibrationCardHref = "/calibration_card.md",
 }: {
   meta: RankingMeta;
@@ -37,8 +37,11 @@ export function Footer({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const freshAgo = dataFreshnessAgo(meta.data_freshness);
-  const stale = Date.now() - new Date(meta.data_freshness).getTime() > 24 * 60 * 60 * 1000;
+  
+  const [stale, setStale] = useState(false);
+  useEffect(() => {
+    setStale(Date.now() - new Date(meta.data_freshness).getTime() > 24 * 60 * 60 * 1000);
+  }, [meta.data_freshness]);
 
   return (
     <footer
