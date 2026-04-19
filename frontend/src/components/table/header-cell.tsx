@@ -40,24 +40,26 @@ export function HeaderCell({
       <div className={cn("flex flex-col gap-0.5", justify)}>
         <div className="inline-flex items-center gap-1">
           <Tooltip content={tooltip} side="top">
-            <button
-              type="button"
-              onClick={col.sortable ? onSort : undefined}
-              disabled={!col.sortable}
-              className={cn(
-                "inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-text-muted hover:text-text",
-                col.sortable ? "cursor-pointer" : "cursor-default",
-              )}
-            >
-              <span>{col.label}</span>
-              {active && col.sortable && (
-                sortDir === "desc" ? (
-                  <ChevronDown className="size-3" />
-                ) : (
-                  <ChevronUp className="size-3" />
-                )
-              )}
-            </button>
+            <span className="inline-flex items-center">
+              <button
+                type="button"
+                onClick={col.sortable ? onSort : undefined}
+                disabled={!col.sortable}
+                className={cn(
+                  "inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-text-muted hover:text-text",
+                  col.sortable ? "cursor-pointer" : "cursor-default",
+                )}
+              >
+                <span>{col.label}</span>
+                {active && col.sortable && (
+                  sortDir === "desc" ? (
+                    <ChevronDown className="size-3" />
+                  ) : (
+                    <ChevronUp className="size-3" />
+                  )
+                )}
+              </button>
+            </span>
           </Tooltip>
           <HeaderPopover col={col} />
         </div>

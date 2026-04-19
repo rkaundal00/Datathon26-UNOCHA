@@ -28,16 +28,18 @@ export function CountryDetailSheet({
     setOpen(Boolean(focusIso && openTab));
   }, [focusIso, openTab]);
 
+  const paramsKey = JSON.stringify(params);
+
   useEffect(() => {
     if (!focusIso || !openTab) return;
     let cancel = false;
-    fetchCountry(focusIso, params).then((d) => {
+    fetchCountry(focusIso, JSON.parse(paramsKey)).then((d) => {
       if (!cancel) setData(d);
     });
     return () => {
       cancel = true;
     };
-  }, [focusIso, openTab, params]);
+  }, [focusIso, openTab, paramsKey]);
 
   function close() {
     setOpen(false);

@@ -64,7 +64,7 @@ export function ScatterPanels({
       <div className="h-80 relative">
         {/* Quadrant background colors (optional) or just rely on crosshairs */}
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 20, right: 30, bottom: 30, left: 30 }}>
+          <ScatterChart margin={{ top: 20, right: 30, bottom: 30, left: 30 }} accessibilityLayer={false} style={{ outline: "none" }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis
               type="number"
@@ -94,7 +94,7 @@ export function ScatterPanels({
               stroke="var(--text-muted)"
             />
             <ZAxis type="number" dataKey="z" range={[50, 400]} />
-            <Tooltip content={<CompassTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+            <Tooltip content={<CompassTooltip />} cursor={false} />
             
             {/* The Crosshairs creating the 4 Quadrants */}
             <ReferenceLine x={medianX} stroke="var(--text-muted)" strokeWidth={1} />
@@ -102,6 +102,7 @@ export function ScatterPanels({
 
             <Scatter
               data={data}
+              activeShape={false}
               shape={(props: unknown) => {
                 const p = props as { cx: number; cy: number; r?: number; payload?: { iso3?: string } };
                 const cx = p.cx;

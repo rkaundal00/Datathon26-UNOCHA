@@ -41,24 +41,23 @@ export function TrendView({
                 if (!active || !payload?.length) return null;
                 const req = payload.find((p) => p.dataKey === "requirements")?.value as number | undefined;
                 const fund = payload.find((p) => p.dataKey === "funding")?.value as number | undefined;
+                const isChronic = payload[0]?.payload?.chronicMark;
                 return (
-                  <div className="rounded border border-border bg-surface p-2 text-xs shadow">
-                    <div className="font-semibold">{label}</div>
-                    {req != null && <div>Req: {usdCompact(req)}</div>}
-                    {fund != null && <div>Fund: {usdCompact(fund)}</div>}
+                  <div className="rounded border border-border bg-surface p-2 text-xs shadow z-50">
+                    <div className="font-semibold mb-1">{label}</div>
+                    {req != null && <div>Requirements: {usdCompact(req)}</div>}
+                    {fund != null && <div>Funding: {usdCompact(fund)}</div>}
                     {req != null && fund != null && (
                       <div>Coverage: {Math.round((fund / req) * 100)}%</div>
+                    )}
+                    {isChronic && (
+                      <div className="mt-1 pt-1 border-t border-border text-score-high font-semibold flex items-center gap-1">
+                        ✖ Chronic Gap (&lt;50%)
+                      </div>
                     )}
                   </div>
                 );
               }}
-            />
-            <Area
-              dataKey="requirements"
-              stroke="none"
-              fill="var(--score-high)"
-              fillOpacity={0.1}
-              connectNulls={false}
             />
             <Line
               type="monotone"
@@ -78,7 +77,7 @@ export function TrendView({
                 );
               }}
               connectNulls
-              name="requirements"
+              name="Requested ($)"
             />
             <Line
               type="monotone"
@@ -88,14 +87,20 @@ export function TrendView({
               strokeDasharray="4 3"
               dot={{ r: 2 }}
               connectNulls
-              name="funding"
+              name="Total Funding ($)"
             />
             <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      
+      <div className="text-xs text-text-muted px-2 flex items-center gap-2">
+        <span className="text-score-high font-bold">✖</span> 
+        Indicates a chronically underfunded year (&lt; 50% coverage)
+      </div>
+
       {inset && (
-        <div className="rounded border border-border bg-surface-2 p-3">
+        <div className="rounded border border-border bg-surface-2 p-3 mt-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
             2026 flows — transaction-level (inset)
           </h3>

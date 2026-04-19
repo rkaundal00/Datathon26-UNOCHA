@@ -97,9 +97,9 @@ export function CountryTable({
         </span>
         <span>{rows.length} rows · analysis year {meta.analysis_year}</span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto max-h-[50vh] relative">
         <table className="w-full border-collapse text-sm">
-          <thead className="bg-surface-2">
+          <thead className="bg-surface-2 text-[11px] uppercase tracking-wider text-text-muted z-10">
             <tr>
               {cols.map((c) => (
                 <HeaderCell
@@ -165,9 +165,6 @@ export function CountryTable({
                           >
                             <span>
                               {percent(row.coverage_ratio)}
-                              {row.coverage_ratio > 1 && (
-                                <span className="ml-1 text-amber-600">↑</span>
-                              )}
                             </span>
                           </CoverageValueTooltip>
                         </ZeroCell>

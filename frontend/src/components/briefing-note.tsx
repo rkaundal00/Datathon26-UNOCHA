@@ -1,21 +1,45 @@
+"use client";
+
 import type { CountryDetailResponse } from "@/lib/api-types";
 import { numCompact, percent, usdCompact } from "@/lib/formatters";
 import { Badge } from "@/components/ui/badge";
 import { ChronicDots } from "@/components/ui/score-bar";
 import { QaFlagList } from "@/components/qa-flag";
+import { useRouter, useSearchParams } from "next/navigation";
+import { mergeUrl } from "@/lib/url-state";
+import { ChartLine, Network, Users } from "lucide-react";
 
 export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
   const { country, briefing } = detail;
   const fact = briefing.fact_sheet;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  function openDetail(tab: string) {
+    const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
+      detail: tab,
+    });
+    router.replace(`/?${qs}`, { scroll: false });
+  }
+
   return (
     <section
       aria-labelledby="briefing-heading"
       className="rounded-lg border border-border bg-surface p-4 flex flex-col gap-3"
     >
-      <header>
+      <header className="flex items-center justify-between">
         <h2 id="briefing-heading" className="text-lg font-semibold">
           {country.country}
         </h2>
+        <div className="flex gap-1">
+          <button 
+            onClick={() => openDetail("trend")}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface-2 hover:bg-surface-3 transition-colors border border-border rounded text-xs font-medium text-text-muted hover:text-text"
+          >
+            <ChartLine className="h-3.5 w-3.5" />
+            <span>Open Trend Graph</span>
+          </button>
+        </div>
       </header>
 
       <p className="text-sm leading-relaxed text-text" aria-live="polite">
@@ -31,7 +55,6 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
           value={
             <>
               {percent(fact.coverage_ratio)}
-              {fact.coverage_ratio > 1 && <span className="ml-1 text-amber-600">↑</span>}
             </>
           }
         />

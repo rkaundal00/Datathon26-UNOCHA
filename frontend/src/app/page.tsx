@@ -64,7 +64,7 @@ export default async function Page(props: {
           </Suspense>
           <ScatterPanels rows={ranking.rows} focusIso={focusIso} />
         </div>
-        <aside className="lg:col-span-4">
+        <aside className="lg:col-span-4 sticky top-[120px] self-start">
           {detail ? (
             <BriefingNote detail={detail} />
           ) : (

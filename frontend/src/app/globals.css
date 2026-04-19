@@ -62,8 +62,60 @@ body {
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
+/* Custom Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--text-muted);
+}
+
 .tabular {
   font-variant-numeric: tabular-nums;
+}
+
+.recharts-wrapper * {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.recharts-wrapper,
+.recharts-surface,
+.recharts-responsive-container,
+.recharts-layer,
+.recharts-scatter-symbol,
+.recharts-accessibility-layer,
+circle {
+  outline: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.recharts-tooltip-cursor {
+  display: none !important;
+}
+
+.recharts-accessibility-layer {
+  display: none !important;
+  pointer-events: none !important;
 }
 
 button:focus-visible,

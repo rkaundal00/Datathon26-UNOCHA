@@ -19,9 +19,9 @@ const PCT = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 0,
 });
 
-export const usdCompact = (value: number) => USD_COMPACT.format(value);
+export const usdCompact = (value: number) => USD_COMPACT.format(value).replace(/\.0+([KMBT])/i, "$1");
 export const usdFull = (value: number) => USD_FULL.format(value);
-export const numCompact = (value: number) => NUM_COMPACT.format(value);
+export const numCompact = (value: number) => NUM_COMPACT.format(value).replace(/\.0+([KMBT])/i, "$1");
 export const numFull = (value: number) => NUM_FULL.format(value);
 export const percent = (value: number) => PCT.format(value);
 
