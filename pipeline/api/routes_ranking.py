@@ -14,6 +14,7 @@ from pipeline.api.service import (
     make_meta,
     parse_weights,
 )
+from pipeline.transform.sector_ranking import SECTOR_CODES
 
 router = APIRouter()
 
@@ -28,7 +29,19 @@ def get_ranking(
     sort_dir: Literal["asc", "desc"] = Query("desc"),
     weights: str | None = Query(None),
     flags: str | None = Query(None, description="CSV of QAFlag values to filter by"),
+    sector: str | None = Query(
+        None, description="HNO umbrella sector code (e.g. FSC, HEA); see SECTOR_CATALOG."
+    ),
 ) -> RankingResponse:
+    if sector is not None:
+        sector = sector.strip().upper() or None
+    if sector is not None and sector not in SECTOR_CODES:
+        raise HTTPException(status_code=400, detail=f"unknown sector {sector!r}")
+    if sector is not None and mode == "structural":
+        # Cluster-level multi-year chronic signals are unsupported — defend the API
+        # even though the frontend disables this combination.
+        mode = "acute"
+
     # Mode preset vs explicit sort — explicit wins per base spec §6.
     default_sort, default_dir = MODE_DEFAULT_SORT[mode]
     effective_sort = sort or default_sort
@@ -52,6 +65,7 @@ def get_ranking(
         weights=parsed_weights,
         sort=effective_sort,
         sort_dir=effective_dir,
+        sector=sector,
     )
     if flags:
         rows = filter_rows_by_flags(rows, [f.strip() for f in flags.split(",") if f.strip()])
@@ -66,5 +80,6 @@ def get_ranking(
         weights=parsed_weights,
         total_count=total,
         excluded_count=excluded,
+        sector=sector,
     )
     return RankingResponse(meta=meta, rows=rows)

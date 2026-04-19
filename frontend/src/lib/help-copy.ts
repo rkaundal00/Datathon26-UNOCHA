@@ -118,6 +118,12 @@ export const FLAG_COPY: Record<
     tooltip:
       "FTS records requirements for this country-year but no declared appeal type. Classified as Unknown.",
   },
+  cluster_funding_missing: {
+    label: "No funding reported for this sector",
+    short: "no sector $",
+    tooltip:
+      "HNO reports people in need for this sector, but FTS shows no matching cluster funding. Coverage is shown as 0% — treat as a potential reporting gap, not a confirmed shortfall.",
+  },
 };
 
 export const CHRONIC_CLUSTER_TOOLTIP =

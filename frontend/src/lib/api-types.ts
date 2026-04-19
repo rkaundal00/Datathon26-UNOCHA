@@ -18,7 +18,8 @@ export type QAFlag =
   | "cluster_taxonomy_mismatch"
   | "severity_unavailable"
   | "preliminary_hno"
-  | "hrp_status_unknown";
+  | "hrp_status_unknown"
+  | "cluster_funding_missing";
 
 export type ExclusionReason =
   | "no_active_hrp"
@@ -31,6 +32,19 @@ export type SortDir = "asc" | "desc";
 export type DetailTab = "clusters" | "trend" | "population";
 
 export type AnalysisYear = 2024 | 2025 | 2026;
+
+export interface SectorProjection {
+  code: string;
+  name: string;
+  pin_cluster: number;
+  cluster_pin_share: number;
+  cluster_requirements_usd: number;
+  cluster_funding_usd: number;
+  cluster_coverage_ratio: number;
+  cluster_unmet_need_usd: number;
+  cluster_gap_score: number;
+  qa_flags: QAFlag[];
+}
 
 export interface CountryRow {
   iso3: string;
@@ -52,12 +66,19 @@ export interface CountryRow {
   hrp_status: HRPStatus;
   hno_year: number;
   qa_flags: QAFlag[];
+  sector: SectorProjection | null;
 }
 
 export interface CustomWeights {
   w_coverage: number;
   w_pin: number;
   w_chronic: number;
+}
+
+export interface SectorOption {
+  code: string;
+  name: string;
+  available: boolean;
 }
 
 export interface RankingMeta {
@@ -71,6 +92,8 @@ export interface RankingMeta {
   total_count: number;
   excluded_count: number;
   data_freshness: string;
+  sector: string | null;
+  available_sectors: SectorOption[];
 }
 
 export interface RankingResponse {
@@ -184,6 +207,7 @@ export const QA_FLAG_LABEL: Record<QAFlag, string> = {
   severity_unavailable: "Severity not available",
   preliminary_hno: "2026 HNO is preliminary",
   hrp_status_unknown: "Plan type unknown",
+  cluster_funding_missing: "No FTS funding reported for this sector",
 };
 
 export const EXCLUSION_LABEL: Record<ExclusionReason, string> = {

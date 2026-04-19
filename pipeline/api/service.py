@@ -23,8 +23,15 @@ from pipeline.api.schemas import (
     InCohortFlaggedRow,
     PopulationGroupRow,
     RankingMeta,
+    SectorOption,
+    SectorProjection,
     TrendInset2026,
     TrendSeries,
+)
+from pipeline.transform.sector_ranking import (
+    SECTOR_CODES,
+    available_sectors_meta,
+    build_sector_projection_rows,
 )
 from pipeline.compute.composites import (
     chronic_norm,
@@ -111,7 +118,9 @@ def make_meta(
     weights: CustomWeights | None,
     total_count: int,
     excluded_count: int,
+    sector: str | None = None,
 ) -> RankingMeta:
+    options = [SectorOption(**opt) for opt in available_sectors_meta(analysis_year)]
     return RankingMeta(
         analysis_year=analysis_year,
         pin_floor=pin_floor,
@@ -123,6 +132,8 @@ def make_meta(
         total_count=total_count,
         excluded_count=excluded_count,
         data_freshness=_datasets_freshness(),
+        sector=sector,
+        available_sectors=options,
     )
 
 
@@ -197,19 +208,35 @@ def _sort_rows(
     sort: str,
     sort_dir: str,
 ) -> list[CountryRow]:
-    """Sort CountryRows by an arbitrary column name. Unknown columns fall back to gap_score desc."""
+    """Sort CountryRows by an arbitrary column name. Unknown columns fall back to gap_score desc.
+
+    When a row carries a `sector` projection, metrics that have a cluster-level
+    counterpart read from the projection so the table re-ranks under the sector lens.
+    """
     reverse = sort_dir == "desc"
 
     def key_for(row: CountryRow):
+        s = row.sector
         if sort == "coverage_gap":
-            return 1.0 - min(max(row.coverage_ratio, 0.0), 1.0)
+            c = s.cluster_coverage_ratio if s else row.coverage_ratio
+            return 1.0 - min(max(c, 0.0), 1.0)
+        if sort == "coverage_ratio":
+            return s.cluster_coverage_ratio if s else row.coverage_ratio
+        if sort == "gap_score":
+            return s.cluster_gap_score if s else row.gap_score
+        if sort == "pin":
+            return s.pin_cluster if s else row.pin
+        if sort == "pin_share":
+            return s.cluster_pin_share if s else row.pin_share
+        if sort == "unmet_need_usd":
+            return s.cluster_unmet_need_usd if s else row.unmet_need_usd
         if sort == "custom_gap_score":
             return row.custom_gap_score or 0.0
         if sort == "donor_concentration":
             return row.donor_concentration if row.donor_concentration is not None else -1.0
         if sort in SORTABLE_COLUMNS:
             return getattr(row, sort)
-        return row.gap_score
+        return s.cluster_gap_score if s else row.gap_score
 
     return sorted(rows, key=key_for, reverse=reverse)
 
@@ -222,11 +249,34 @@ def build_ranking_rows(
     weights: CustomWeights | None,
     sort: str,
     sort_dir: str,
+    sector: str | None = None,
 ) -> tuple[list[CountryRow], int, int]:
-    """Run the pipeline and return (sorted rows, total_count, excluded_count)."""
+    """Run the pipeline and return (sorted rows, total_count, excluded_count).
+
+    If `sector` is set, each returned row carries a SectorProjection and rows that
+    have no HNO PIN for the sector are dropped.
+    """
     table = build_country_year_table(analysis_year, pin_floor, require_hrp)
     excluded = build_excluded_table(analysis_year, pin_floor, require_hrp)
     rows = [_row_to_country(r, weights) for r in table.to_dicts()]
+
+    if sector:
+        population_by_iso3 = {r.iso3: r.population for r in rows}
+        projections = build_sector_projection_rows(
+            analysis_year=analysis_year,
+            sector_code=sector,
+            cohort_iso3s=[r.iso3 for r in rows],
+            population_by_iso3=population_by_iso3,
+        )
+        projected: list[CountryRow] = []
+        for r in rows:
+            p = projections.get(r.iso3)
+            if p is None:
+                continue
+            r.sector = SectorProjection(**p)
+            projected.append(r)
+        rows = projected
+
     rows = _sort_rows(rows, sort, sort_dir)
     return rows, len(rows), len(excluded)
 

@@ -18,6 +18,7 @@ import { MetricSelector } from "./metric-selector";
 import { YearPicker } from "./year-picker";
 import { TopTenPanel } from "./top-ten-panel";
 import { ClientBriefing } from "./client-briefing";
+import { SectorChip } from "@/components/sector-chip";
 import type { MapRow } from "./map-data";
 import { legendStopsFor, metricLabel, PALETTE } from "./color-scales";
 import type { MapHandle } from "./world-choropleth";
@@ -142,19 +143,37 @@ export function MapsView({
   const fallbackRow = focusIso ? rowsWithNames.get(focusIso) ?? null : null;
   const cohortCount = rowsArray.filter((r) => r.inCohort).length;
 
+  const sectorName = meta.sector
+    ? meta.available_sectors.find((s) => s.code === meta.sector)?.name ?? meta.sector
+    : null;
+
   return (
     <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-4 px-4 py-4">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">
-            World view · <span className="text-text-muted font-normal">{metricLabel(metric)}</span>
+            World view · <span className="text-text-muted font-normal">
+              {sectorName ? `${sectorName} — ` : ""}{metricLabel(metric)}
+            </span>
           </h1>
           <p className="mt-0.5 text-[12px] text-text-muted">
-            {cohortCount} countries in cohort ({year}) · {meta.excluded_count} excluded · hover to read, click to pin
+            {cohortCount} countries in cohort ({year})
+            {sectorName && <> under <strong className="text-text">{sectorName}</strong></>} ·{" "}
+            {meta.excluded_count} excluded · hover to read, click to pin
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <MetricSelector value={metric} />
+          <SectorChip
+            value={meta.sector}
+            options={meta.available_sectors}
+            onChange={(code) => {
+              const base: Record<string, string | null> = { sector: code, sort: null };
+              if (code && meta.mode === "structural") base.mode = "acute";
+              const qs = mergeUrl(new URLSearchParams(searchParams.toString()), base);
+              router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
+            }}
+          />
+          <MetricSelector value={metric} sectorActive={Boolean(sectorName)} />
           <YearPicker value={year} />
         </div>
       </header>

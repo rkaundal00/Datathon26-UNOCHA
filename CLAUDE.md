@@ -152,7 +152,5 @@ Fixture JSONs under `tests/fixtures/` pin SDN / TCD / YEM expected outputs; `tes
 ## Pointers
 
 - **`geo-insight-challenge.md`** — authoritative brief.
-- **`docs/spec.md`** — design contract; every other spec references it.
-- **`docs/spec-data-pipeline.md` §8** — frozen Pydantic schemas.
 - **`datasets/CLAUDE.md`** — scoped context when working inside the datasets tree.
 - **`datasets/<name>/README.md`** — deep schema + caveats per dataset.

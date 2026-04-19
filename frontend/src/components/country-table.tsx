@@ -80,8 +80,19 @@ export function CountryTable({
     router.replace(`/?${qs}`, { scroll: false });
   }
 
+  const sectorName = meta.sector
+    ? meta.available_sectors.find((s) => s.code === meta.sector)?.name ?? meta.sector
+    : null;
+
   return (
     <section id="country-table" className="rounded-lg border border-border bg-surface">
+      {sectorName && (
+        <div className="border-b border-border bg-accent/5 px-3 py-1.5 text-xs">
+          <span className="text-text-muted">Viewing:</span>{" "}
+          <strong className="text-text">{sectorName}</strong>
+          <span className="text-text-muted"> — PIN, coverage and unmet reflect this sector only.</span>
+        </div>
+      )}
       <div className="flex items-center justify-between border-b border-border px-3 py-2 text-xs text-text-muted">
         <span>
           Sorted by: <strong className="text-text">{meta.sort}</strong> ·{" "}
@@ -117,6 +128,15 @@ export function CountryTable({
           <tbody className="divide-y divide-border">
             {rows.map((row) => {
               const isFocused = focusIso === row.iso3;
+              const s = row.sector;
+              const vPin = s ? s.pin_cluster : row.pin;
+              const vPinShare = s ? s.cluster_pin_share : row.pin_share;
+              const vCoverage = s ? s.cluster_coverage_ratio : row.coverage_ratio;
+              const vReq = s ? s.cluster_requirements_usd : row.requirements_usd;
+              const vFun = s ? s.cluster_funding_usd : row.funding_usd;
+              const vUnmet = s ? s.cluster_unmet_need_usd : row.unmet_need_usd;
+              const vGap = s ? s.cluster_gap_score : row.gap_score;
+              const rowFlags = s ? [...row.qa_flags, ...s.qa_flags] : row.qa_flags;
               return (
                 <Fragment key={row.iso3}>
                   <tr
@@ -135,8 +155,8 @@ export function CountryTable({
 
                     <td className="px-3 py-2 text-right">
                       <span className="inline-flex items-center">
-                        <PinValueTooltip pin={row.pin} year={row.hno_year}>
-                          {numCompact(row.pin)}
+                        <PinValueTooltip pin={vPin} year={row.hno_year}>
+                          {numCompact(vPin)}
                         </PinValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.pin} row={row} />
                       </span>
@@ -145,11 +165,11 @@ export function CountryTable({
                     <td className="px-3 py-2 text-right">
                       <span className="inline-flex items-center">
                         <PinShareValueTooltip
-                          pin={row.pin}
+                          pin={vPin}
                           population={row.population}
                           popYear={row.population_reference_year}
                         >
-                          {percent(row.pin_share)}
+                          {percent(vPinShare)}
                         </PinShareValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.pin_share} row={row} />
                       </span>
@@ -159,12 +179,12 @@ export function CountryTable({
                       <span className="inline-flex items-center">
                         <ZeroCell row={row} kind="coverage">
                           <CoverageValueTooltip
-                            requirements={row.requirements_usd}
-                            funding={row.funding_usd}
+                            requirements={vReq}
+                            funding={vFun}
                             year={row.analysis_year}
                           >
                             <span>
-                              {percent(row.coverage_ratio)}
+                              {percent(vCoverage)}
                             </span>
                           </CoverageValueTooltip>
                         </ZeroCell>
@@ -176,11 +196,11 @@ export function CountryTable({
                       <span className="inline-flex items-center">
                         <ZeroCell row={row} kind="unmet">
                           <UnmetValueTooltip
-                            requirements={row.requirements_usd}
-                            funding={row.funding_usd}
+                            requirements={vReq}
+                            funding={vFun}
                             year={row.analysis_year}
                           >
-                            <span>{usdCompact(row.unmet_need_usd)}</span>
+                            <span>{usdCompact(vUnmet)}</span>
                           </UnmetValueTooltip>
                         </ZeroCell>
                         <ConfidenceGlyph col={COLUMN_META.unmet_need_usd} row={row} />
@@ -190,13 +210,13 @@ export function CountryTable({
                     <td className="px-3 py-2 text-right">
                       <span className="inline-flex items-center">
                         <GapScoreValueTooltip
-                          coverage={row.coverage_ratio}
-                          pinShare={row.pin_share}
-                          gap={row.gap_score}
+                          coverage={vCoverage}
+                          pinShare={vPinShare}
+                          gap={vGap}
                         >
                           <div className="flex flex-col items-end gap-1">
-                            <span className="font-semibold">{row.gap_score.toFixed(3)}</span>
-                            <ScoreBar value={row.gap_score} className="w-20" />
+                            <span className="font-semibold">{vGap.toFixed(3)}</span>
+                            <ScoreBar value={vGap} className="w-20" />
                           </div>
                         </GapScoreValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.gap_score} row={row} />
@@ -240,7 +260,7 @@ export function CountryTable({
                     </td>
 
                     <td className="px-3 py-2">
-                      <QaFlagList flags={row.qa_flags} />
+                      <QaFlagList flags={rowFlags} />
                     </td>
                   </tr>
                 </Fragment>

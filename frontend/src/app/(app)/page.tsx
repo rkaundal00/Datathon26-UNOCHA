@@ -37,7 +37,7 @@ export default async function Page(props: {
           <div className="flex items-center justify-between pb-2">
             <ScopeBanner meta={ranking.meta} />
             <div className="flex items-center gap-2">
-              <ModeToggleBar value={urlState.mode} />
+              <ModeToggleBar value={urlState.mode} sectorActive={Boolean(ranking.meta.sector)} />
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs">

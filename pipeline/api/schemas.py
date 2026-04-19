@@ -21,6 +21,7 @@ QAFlag = Literal[
     "severity_unavailable",
     "preliminary_hno",
     "hrp_status_unknown",
+    "cluster_funding_missing",
 ]
 ExclusionReason = Literal[
     "no_active_hrp",
@@ -32,6 +33,19 @@ SortDir = Literal["asc", "desc"]
 DetailTab = Literal["clusters", "trend", "population"]
 
 # ---------- core rows ----------
+
+
+class SectorProjection(BaseModel):
+    code: str
+    name: str
+    pin_cluster: int
+    cluster_pin_share: float = Field(..., ge=0.0, le=1.0)
+    cluster_requirements_usd: int
+    cluster_funding_usd: int
+    cluster_coverage_ratio: float  # raw, uncapped
+    cluster_unmet_need_usd: int
+    cluster_gap_score: float = Field(..., ge=0.0, le=1.0)
+    qa_flags: list[QAFlag]
 
 
 class CountryRow(BaseModel):
@@ -54,6 +68,7 @@ class CountryRow(BaseModel):
     hrp_status: HRPStatus
     hno_year: int
     qa_flags: list[QAFlag]
+    sector: SectorProjection | None = None
 
 
 class CustomWeights(BaseModel):
@@ -69,6 +84,12 @@ class CustomWeights(BaseModel):
         return self
 
 
+class SectorOption(BaseModel):
+    code: str
+    name: str
+    available: bool
+
+
 class RankingMeta(BaseModel):
     analysis_year: int
     pin_floor: int
@@ -80,6 +101,8 @@ class RankingMeta(BaseModel):
     total_count: int
     excluded_count: int
     data_freshness: str  # ISO 8601
+    sector: str | None = None
+    available_sectors: list[SectorOption] = Field(default_factory=list)
 
 
 class RankingResponse(BaseModel):

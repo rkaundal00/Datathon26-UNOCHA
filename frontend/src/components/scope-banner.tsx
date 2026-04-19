@@ -6,6 +6,7 @@ import { useState } from "react";
 import { mergeUrl } from "@/lib/url-state";
 import type { AnalysisYear, RankingMeta } from "@/lib/api-types";
 import { ChevronDown, Filter, Info } from "lucide-react";
+import { SectorChip } from "@/components/sector-chip";
 
 export function ScopeBanner({ meta }: { meta: RankingMeta }) {
   const router = useRouter();
@@ -26,17 +27,23 @@ export function ScopeBanner({ meta }: { meta: RankingMeta }) {
         <Filter className="h-4 w-4" />
         <span className="text-sm font-medium">Filters:</span>
       </div>
-      
+
       <PinFloorChip value={meta.pin_floor} onChange={(v) => update({ pin_floor: v })} />
-      <HrpChip
-        value={meta.require_hrp}
-        onChange={(v) => update({ hrp: v ? "true" : "false" })}
-      />
       <YearChip
         value={meta.analysis_year}
         onChange={(v) => update({ year: v })}
       />
-      
+      <SectorChip
+        value={meta.sector}
+        options={meta.available_sectors}
+        onChange={(v) => {
+          if (!v) return update({ sector: null });
+          const patch: Record<string, string | null> = { sector: v, sort: null };
+          if (meta.mode === "structural") patch.mode = "acute";
+          update(patch);
+        }}
+      />
+
       <div className="ml-auto flex items-center gap-2 text-xs text-text-muted">
         <Popover.Root>
           <Popover.Trigger asChild>
@@ -51,6 +58,7 @@ export function ScopeBanner({ meta }: { meta: RankingMeta }) {
               <ul className="list-disc pl-4 space-y-1 text-text-muted mt-2">
                 <li><strong>Denominator:</strong> People in Need (PIN)</li>
                 <li><strong>Currency:</strong> USD (nominal)</li>
+                <li><strong>Cohort:</strong> HRP / Flash Appeal / Regional RP with PIN ≥ 1M</li>
               </ul>
             </Popover.Content>
           </Popover.Portal>
@@ -83,7 +91,7 @@ function PinFloorChip({
             Minimum People in Need
           </div>
           <div className="flex flex-col gap-0.5 text-sm">
-            {[500_000, 1_000_000, 2_000_000].map((v) => (
+            {[0, 500_000, 1_000_000, 2_000_000].map((v) => (
               <button
                 key={v}
                 className="flex items-center justify-between rounded px-2.5 py-1.5 text-left hover:bg-surface-2 transition-colors"
@@ -103,63 +111,10 @@ function PinFloorChip({
   );
 }
 
-function HrpChip({
-  value,
-  onChange,
-}: {
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger asChild>
-        <button
-          className="flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-3 py-1.5 text-sm hover:bg-surface-3 hover:border-text-muted transition-colors"
-          title="Filter by response plan type"
-        >
-          <span className="text-text-muted">Plans:</span>
-          <span className="font-medium">{value ? "HRP/Flash Only" : "All Types"}</span>
-          <ChevronDown className="h-3.5 w-3.5 text-text-muted" />
-        </button>
-      </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content className="z-50 mt-2 rounded-lg border border-border bg-surface p-1 shadow-lg w-[280px]" sideOffset={4}>
-           <div className="px-2 py-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
-            Response Plan Type
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <button
-              className="flex flex-col items-start rounded px-2.5 py-2 hover:bg-surface-2 transition-colors relative"
-              onClick={() => {
-                onChange(true);
-                setOpen(false);
-              }}
-            >
-              <div className="flex items-center w-full">
-                <span className="text-sm font-medium">Strict (HRP/Flash Only)</span>
-                {value && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-accent"></div>}
-              </div>
-              <span className="text-xs text-text-muted mt-1 text-left">Only Humanitarian Response Plans, Flash Appeals, and Regional Plans.</span>
-            </button>
-            <button
-              className="flex flex-col items-start rounded px-2.5 py-2 hover:bg-surface-2 transition-colors relative"
-              onClick={() => {
-                onChange(false);
-                setOpen(false);
-              }}
-            >
-              <div className="flex items-center w-full">
-                <span className="text-sm font-medium">Broad (All Types)</span>
-                {!value && <div className="ml-auto h-1.5 w-1.5 rounded-full bg-accent"></div>}
-              </div>
-              <span className="text-xs text-text-muted mt-1 text-left">Includes Other and Unknown plans.</span>
-            </button>
-          </div>
-        </Popover.Content>
-      </Popover.Portal>
-    </Popover.Root>
-  );
+function compact(v: number): string {
+  if (v >= 1_000_000) return `${v / 1_000_000}M`;
+  if (v >= 1_000) return `${v / 1_000}k`;
+  return String(v);
 }
 
 function YearChip({
@@ -211,8 +166,3 @@ function YearChip({
   );
 }
 
-function compact(v: number): string {
-  if (v >= 1_000_000) return `${v / 1_000_000}M`;
-  if (v >= 1_000) return `${v / 1_000}k`;
-  return String(v);
-}

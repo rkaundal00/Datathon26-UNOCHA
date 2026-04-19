@@ -23,7 +23,13 @@ const OPTIONS: { value: Mode; label: string; tooltip: string }[] = [
   },
 ];
 
-export function ModeToggleBar({ value }: { value: Mode }) {
+export function ModeToggleBar({
+  value,
+  sectorActive = false,
+}: {
+  value: Mode;
+  sectorActive?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -43,16 +49,23 @@ export function ModeToggleBar({ value }: { value: Mode }) {
       aria-label="Analysis mode"
       className="inline-flex rounded-md border border-border bg-surface p-0.5"
     >
-      {OPTIONS.map((opt) => (
-        <ToggleGroup.Item
-          key={opt.value}
-          value={opt.value}
-          title={opt.tooltip}
-          className="h-9 min-w-20 rounded px-3 text-sm data-[state=on]:bg-accent data-[state=on]:text-accent-ink hover:bg-surface-2 data-[state=on]:hover:bg-accent"
-        >
-          {opt.label}
-        </ToggleGroup.Item>
-      ))}
+      {OPTIONS.map((opt) => {
+        const disabled = sectorActive && opt.value === "structural";
+        const title = disabled
+          ? "Disabled: cluster-level multi-year funding is too sparse to show recurring trends."
+          : opt.tooltip;
+        return (
+          <ToggleGroup.Item
+            key={opt.value}
+            value={opt.value}
+            title={title}
+            disabled={disabled}
+            className="h-9 min-w-20 rounded px-3 text-sm data-[state=on]:bg-accent data-[state=on]:text-accent-ink hover:bg-surface-2 data-[state=on]:hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            {opt.label}
+          </ToggleGroup.Item>
+        );
+      })}
     </ToggleGroup.Root>
   );
 }

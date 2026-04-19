@@ -7,6 +7,7 @@ import type {
   RankingMeta,
   RankingResponse,
   AnalysisYear,
+  SectorProjection,
 } from "@/lib/api-types";
 import type { MapMetric } from "@/lib/url-state";
 
@@ -24,6 +25,8 @@ export interface MapRow {
   chronic_years?: number;
   hrp_status?: HRPStatus;
   qa_flags?: QAFlag[];
+  // present iff the backend returned this row under a sector lens
+  sector?: SectorProjection | null;
 }
 
 export interface MapsData {
@@ -65,6 +68,7 @@ function rowFromRanking(r: CountryRow): MapRow {
     chronic_years: r.chronic_years,
     hrp_status: r.hrp_status,
     qa_flags: r.qa_flags,
+    sector: r.sector ?? null,
   };
 }
 
@@ -81,12 +85,36 @@ export function topTen(rows: Map<string, MapRow>, metric: MapMetric, n = 10): Ma
   const cohort = Array.from(rows.values()).filter((r) => r.inCohort);
   const dir = METRIC_DIR[metric];
   const valueOf = (r: MapRow): number => {
-    const v = metric === "hrp_status" ? hrpOrdinal(r.hrp_status) : (r[metric] as number | undefined);
+    if (metric === "hrp_status") return hrpOrdinal(r.hrp_status);
+    const v = metricValue(r, metric);
     return v == null ? (dir === "desc" ? -Infinity : Infinity) : v;
   };
   return cohort
     .sort((a, b) => (dir === "desc" ? valueOf(b) - valueOf(a) : valueOf(a) - valueOf(b)))
     .slice(0, n);
+}
+
+/** Returns the metric's numeric value, reading from the sector projection when present. */
+export function metricValue(row: MapRow, metric: MapMetric): number | undefined {
+  const s = row.sector;
+  if (s) {
+    switch (metric) {
+      case "gap_score":
+        return s.cluster_gap_score;
+      case "coverage_ratio":
+        return s.cluster_coverage_ratio;
+      case "pin":
+        return s.pin_cluster;
+      case "pin_share":
+        return s.cluster_pin_share;
+      case "chronic_years":
+        return row.chronic_years;
+      case "hrp_status":
+        return undefined;
+    }
+  }
+  if (metric === "hrp_status") return undefined;
+  return row[metric] as number | undefined;
 }
 
 function hrpOrdinal(s?: HRPStatus): number {
@@ -101,15 +129,16 @@ const usdFmt = new Intl.NumberFormat("en-US", {
 
 export function formatMetricValue(metric: MapMetric, row: MapRow): string {
   if (!row.inCohort) return "—";
+  const v = metricValue(row, metric);
   switch (metric) {
     case "gap_score":
-      return (row.gap_score ?? 0).toFixed(3);
+      return (v ?? 0).toFixed(3);
     case "coverage_ratio":
-      return `${((row.coverage_ratio ?? 0) * 100).toFixed(0)}%`;
+      return `${((v ?? 0) * 100).toFixed(0)}%`;
     case "pin":
-      return usdFmt.format(row.pin ?? 0);
+      return usdFmt.format(v ?? 0);
     case "pin_share":
-      return `${((row.pin_share ?? 0) * 100).toFixed(1)}%`;
+      return `${((v ?? 0) * 100).toFixed(1)}%`;
     case "chronic_years":
       return `${row.chronic_years ?? 0}/5`;
     case "hrp_status":

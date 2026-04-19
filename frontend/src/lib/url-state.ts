@@ -36,6 +36,7 @@ export interface UrlState {
   detail: "clusters" | "trend" | "population" | null;
   flags: string[];
   metric: MapMetric;
+  sector: string | null;
 }
 
 type SearchParamValue = string | string[] | undefined;
@@ -63,12 +64,16 @@ export function parseUrlState(
   raw: Record<string, SearchParamValue>,
 ): UrlState {
   const year = asEnum(first(raw.year), ["2024", "2025", "2026"] as const, "2025") as "2024" | "2025" | "2026";
-  const mode = asEnum(first(raw.mode), ["acute", "structural", "combined"] as const, "combined");
+  let mode = asEnum(first(raw.mode), ["acute", "structural", "combined"] as const, "combined");
   const sort = first(raw.sort) ?? null;
   const sortDir = asEnum(first(raw.sort_dir ?? raw.dir), ["asc", "desc"] as const, "desc");
   const scatter = asEnum(first(raw.scatter), ["a", "b"] as const, "a");
   const flagsRaw = first(raw.flags);
   const flags = flagsRaw ? flagsRaw.split(",").filter(Boolean) : [];
+  const sectorRaw = first(raw.sector);
+  const sector = sectorRaw ? sectorRaw.toUpperCase() : null;
+  // Cluster-level chronic trends are unsupported — coerce so the URL stays honest.
+  if (sector && mode === "structural") mode = "acute";
   return {
     year: Number(year) as AnalysisYear,
     pinFloor: asInt(first(raw.pin_floor), 1_000_000),
@@ -86,6 +91,7 @@ export function parseUrlState(
       | null || null,
     flags,
     metric: asEnum(first(raw.metric), MAP_METRICS, "gap_score"),
+    sector,
   };
 }
 
@@ -112,6 +118,7 @@ export function apiParamsFromUrlState(state: UrlState) {
     sort_dir: sortDir,
     weights: state.weights ?? undefined,
     flags: state.flags.length ? state.flags.join(",") : undefined,
+    sector: state.sector ?? undefined,
   };
 }
 

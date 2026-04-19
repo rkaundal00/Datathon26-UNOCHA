@@ -45,16 +45,20 @@ const HRP_STATUS_COLOR: Record<HRPStatus, string> = {
 
 export function colorForRow(metric: MapMetric, row: MapRow): string {
   if (!row.inCohort) return PALETTE.excluded;
+  const s = row.sector;
   switch (metric) {
     case "gap_score":
-      return gapColor(row.gap_score ?? 0);
+      return gapColor(s ? s.cluster_gap_score : (row.gap_score ?? 0));
     case "coverage_ratio":
-      return coverageColor(row.coverage_ratio ?? 0);
-    case "pin":
-      return row.pin && row.pin > 0 ? pinLogColor(row.pin) : PALETTE.excluded;
+      return coverageColor(s ? s.cluster_coverage_ratio : (row.coverage_ratio ?? 0));
+    case "pin": {
+      const v = s ? s.pin_cluster : row.pin;
+      return v && v > 0 ? pinLogColor(v) : PALETTE.excluded;
+    }
     case "pin_share":
-      return pinShareColor(row.pin_share ?? 0);
+      return pinShareColor(s ? s.cluster_pin_share : (row.pin_share ?? 0));
     case "chronic_years":
+      // Chronic is country-level only; sector lens does not re-interpret.
       return chronicColor(row.chronic_years ?? 0);
     case "hrp_status":
       return row.hrp_status ? HRP_STATUS_COLOR[row.hrp_status] : PALETTE.excluded;

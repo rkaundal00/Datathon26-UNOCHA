@@ -19,6 +19,7 @@ export interface RankingParams {
   sort_dir?: SortDir;
   weights?: string;
   flags?: string;
+  sector?: string;
 }
 
 function buildQuery(params: object): string {
