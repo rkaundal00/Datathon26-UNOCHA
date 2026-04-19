@@ -1,15 +1,13 @@
 # Geo-Insight — UNOCHA Datathon 2026
 
-**Which humanitarian crises are most overlooked?** A ranked gap analysis over documented need (HNO), funding coverage (FTS), pooled-fund allocations (CBPF), and population baselines (COD-PS). Full authoritative brief lives at [`geo-insight-challenge.md`](./geo-insight-challenge.md); the design contract is [`docs/spec.md`](./docs/spec.md) plus the three supplementary specs under [`docs/`](./docs).
+**Which humanitarian crises are most overlooked?** A ranked gap analysis over documented need (HNO), funding coverage (FTS), pooled-fund allocations (CBPF), and population baselines (COD-PS). Full authoritative brief lives at [`geo-insight-challenge.md`](./geo-insight-challenge.md).
 
 The system is a **lens over the data, not a decision engine**: every composite decomposes into its inputs, every exclusion has a visible reason, and every ranking is reproducible from the URL.
 
 ## What's here
 
 - **`pipeline/`** — Python backend. Polars + DuckDB loaders over the Parquet datasets, FastAPI endpoints, frozen Pydantic schemas, and the evaluation module that generates the calibration card.
-- **`frontend/`** — Next.js 16 + React 19 + Tailwind 4 app. Server-rendered entry page with a country table, two scatter views, briefing note, custom-weights panel, data-coverage modal, trend view, cluster drill-down, and keyboard shortcuts. URL state is the source of truth.
-- **`tests/`** — pytest suite (79 tests: ingest, composites, chronic-year logic, QA flags, country-year table, API, sensitivity, back-test, disagreement, calibration card).
-- **`docs/`** — specs (base + data-pipeline + frontend + evaluation).
+- **`frontend/`** — Next.js 16 + React 19 + Tailwind 4 app. Server-rendered entry page with a country table, two scatter views, briefing note, custom-weights panel, data-coverage modal, trend view, cluster drill-down, a Leaflet `/maps` route, and keyboard shortcuts. URL state is the source of truth.
 - **`outputs/calibration_card.md`** — committed judge-facing deliverable; regenerates deterministically from the pipeline.
 - **`datasets/`** — raw Parquet files (read-only); each subdirectory has its own README and scoped CLAUDE.md.
 
@@ -58,11 +56,11 @@ NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000 npm run dev -- --port 3001
 ## Verify
 
 ```bash
-# Pipeline tests
-.venv/bin/python -m pytest tests/ -q
-
-# Regenerate the calibration card
+# Regenerate the calibration card (judge-facing artifact under outputs/)
 .venv/bin/python scripts/regenerate_calibration_card.py
+
+# Frontend type-check
+(cd frontend && npx tsc --noEmit)
 ```
 
 ## Try the coordinator walkthroughs
@@ -90,10 +88,7 @@ Keyboard shortcuts: `1`/`2`/`3` for mode, `a`/`b` for scatter, `e` for CSV expor
 
 ## Non-goals (explicit)
 
-- No choropleth map (country-level ranking is the analytical unit)
 - No LLM-generated numbers (briefing lead is template-only; LLM path is post-MVP with numeric validator)
 - No external data enrichment (ACLED / IPC / media) in the MVP
 - No fairness / counterfactual ranking
 - No coverage-by-demographic (FTS doesn't split funding by demographic; PIN disaggregation is read-only context)
-
-See `docs/spec.md` §2 for the full non-goals list.

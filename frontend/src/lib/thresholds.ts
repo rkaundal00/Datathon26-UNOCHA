@@ -7,8 +7,7 @@
  */
 export const THRESHOLDS = {
   /**
-   * Chronic-year definition cutoff.
-   * Source: docs/spec.md §5 "Chronic years" — mirrored in
+   * Chronic-year definition cutoff. Mirrors
    * pipeline/config.py CHRONIC_COVERAGE_THRESHOLD.
    */
   chronic_coverage: 0.5,
@@ -16,7 +15,6 @@ export const THRESHOLDS = {
   /**
    * chronic_years band: ≥2 consecutive years triggers "structural pattern"
    * descriptor in the row summary.
-   * Source: docs/spec.md §5 language ("consecutive prior years").
    */
   chronic_years_structural: 2,
 
