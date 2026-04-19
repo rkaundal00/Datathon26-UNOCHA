@@ -51,7 +51,7 @@ export function ChronicDots({ value }: { value: number }) {
               "inline-block size-2 rounded-full",
               i < n
                 ? "bg-[color:var(--color-score-high)]"
-                : "bg-surface-2 border border-border",
+                : "bg-text-muted/30 border border-text-muted/50",
             )}
           />
         ))}
