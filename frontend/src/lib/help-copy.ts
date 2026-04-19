@@ -22,7 +22,7 @@ export const HEADER_TOOLTIP: Record<ColumnKey, (year: number) => string> = {
   pin_share: (y) => `PIN divided by national population (${y}). Normalizes need against country size.`,
   coverage_ratio: (y) => `Funding ÷ Requirements for the appeal of record (${y}, FTS). Uncapped — >100% means overfunded.`,
   unmet_need_usd: (y) => `max(0, Requirements − Funding) for ${y}. Absolute shortfall in USD.`,
-  gap_score: () => "(1 − min(coverage, 1)) × PIN share. Ranking heuristic, not a recommendation.",
+  gap_score: () => "(1 − min(coverage, 1)) × (0.5 × pin_share + 0.5 × norm_log₁₀(pin)). Ranking heuristic, not a recommendation.",
   custom_gap_score: () => "Linear composite with user-provided weights. Answers a different question than Gap score.",
   chronic_years: () => "Consecutive prior years with coverage below 50%, capped at 5. Chain breaks on a year ≥50% or a missing record.",
   hrp_status: () => "Which type of appeal FTS has of record: HRP, FlashAppeal, RegionalRP, Other, or Unknown.",
@@ -132,7 +132,7 @@ export const CHRONIC_CLUSTER_TOOLTIP =
 // Confidence tier definitions for the Methodology drawer.
 export const CONFIDENCE_TIER_COPY = {
   authoritative: {
-    label: "Authoritative",
+    label: "Authoritative (default)",
     glyph: "●",
     body: "Value comes directly from a primary source with no derivation (HNO country row, FTS aggregate). Trust high.",
   },

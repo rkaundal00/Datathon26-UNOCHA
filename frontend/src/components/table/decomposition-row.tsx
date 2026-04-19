@@ -48,10 +48,10 @@ function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
       return (
         <span>
           <strong className="text-text">Custom composite:</strong>{" "}
-          {meta.weights.w_coverage.toFixed(2)} × {covGap.toFixed(3)} +{" "}
-          {meta.weights.w_pin.toFixed(2)} × {row.pin_share.toFixed(3)} +{" "}
-          {meta.weights.w_chronic.toFixed(2)} × {chrNorm.toFixed(3)} ={" "}
-          <strong className="text-text">{row.custom_gap_score.toFixed(3)}</strong>
+          {meta.weights.w_coverage.toFixed(2)} × {covGap.toFixed(2)} +{" "}
+          {meta.weights.w_pin.toFixed(2)} × {row.pin_share.toFixed(2)} +{" "}
+          {meta.weights.w_chronic.toFixed(2)} × {chrNorm.toFixed(2)} ={" "}
+          <strong className="text-text">{row.custom_gap_score.toFixed(2)}</strong>
         </span>
       );
     }

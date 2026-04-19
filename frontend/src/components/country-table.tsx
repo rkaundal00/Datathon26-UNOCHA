@@ -14,6 +14,7 @@ import { HeaderCell } from "@/components/table/header-cell";
 import { ZeroCell } from "@/components/table/zero-cell";
 import { ConfidenceGlyph } from "@/components/table/confidence-glyph";
 import { Tooltip } from "@/components/ui/tooltip";
+import { AlertTriangle } from "lucide-react";
 import {
   CoverageValueTooltip,
   GapScoreValueTooltip,
@@ -214,9 +215,12 @@ export function CountryTable({
                           pinShare={vPinShare}
                           gap={vGap}
                         >
-                          <div className="flex flex-col items-end gap-1">
-                            <span className="font-semibold">{vGap.toFixed(3)}</span>
-                            <ScoreBar value={vGap} className="w-20" />
+                          <div className={cn("flex flex-col items-end gap-1", COLUMN_META.gap_score.tier(row) === "imputed" && "text-amber-700/80 dark:text-amber-300/80")}>
+                            <span className="font-semibold">
+                              {COLUMN_META.gap_score.tier(row) === "imputed" && "~ "}
+                              {row.gap_score.toFixed(2)}
+                            </span>
+                            <ScoreBar value={row.gap_score} className={cn("w-20", COLUMN_META.gap_score.tier(row) === "imputed" && "opacity-50")} />
                           </div>
                         </GapScoreValueTooltip>
                         <ConfidenceGlyph col={COLUMN_META.gap_score} row={row} />
@@ -225,9 +229,10 @@ export function CountryTable({
 
                     {hasCustom && (
                       <td className="px-3 py-2 text-right tabular">
-                        <span className="inline-flex items-center">
+                        <span className={cn("inline-flex items-center", COLUMN_META.custom_gap_score.tier(row) === "imputed" && "text-amber-700/80 dark:text-amber-300/80")}>
                           <span className="font-semibold">
-                            {row.custom_gap_score?.toFixed(3) ?? "—"}
+                            {COLUMN_META.custom_gap_score.tier(row) === "imputed" && "~ "}
+                            {row.custom_gap_score?.toFixed(2) ?? "—"}
                           </span>
                           <ConfidenceGlyph col={COLUMN_META.custom_gap_score} row={row} />
                         </span>
@@ -252,7 +257,23 @@ export function CountryTable({
                         }
                       >
                         <span className="inline-flex">
-                          <Badge tone={row.hrp_status === "HRP" ? "indigo" : "neutral"}>
+                          <Badge
+                            tone={
+                              row.hrp_status === "HRP"
+                                ? "indigo"
+                                : row.hrp_status === "FlashAppeal" || row.hrp_status === "RegionalRP"
+                                  ? "neutral"
+                                  : "red"
+                            }
+                            className={
+                              row.hrp_status !== "HRP" && row.hrp_status !== "FlashAppeal" && row.hrp_status !== "RegionalRP" 
+                                ? "gap-1.5 px-2 font-bold tracking-widest ring-1 ring-rose-500/50" 
+                                : ""
+                            }
+                          >
+                            {row.hrp_status !== "HRP" && row.hrp_status !== "FlashAppeal" && row.hrp_status !== "RegionalRP" && (
+                              <AlertTriangle className="size-3" />
+                            )}
                             {PLAN_COPY[row.hrp_status].short}
                           </Badge>
                         </span>
@@ -268,6 +289,11 @@ export function CountryTable({
             })}
           </tbody>
         </table>
+      </div>
+      <div className="flex items-center justify-end gap-4 border-t border-border px-3 py-2 text-[11px] text-text-muted bg-surface-2/50 rounded-b-lg">
+        <span className="font-semibold uppercase tracking-wider">Measure Confidence:</span>
+        <span className="flex items-center gap-1.5"><span className="text-[10px] text-text-muted">◐</span> Derived</span>
+        <span className="flex items-center gap-1.5"><span className="text-[10px] text-amber-700 dark:text-amber-300">○</span> Imputed</span>
       </div>
     </section>
   );

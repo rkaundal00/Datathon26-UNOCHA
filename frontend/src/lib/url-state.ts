@@ -1,4 +1,4 @@
-import type { AnalysisYear, Mode, SortDir, QAFlag } from "@/lib/api-types";
+import type { AnalysisYear, Mode, SortDir } from "@/lib/api-types";
 
 const MODE_DEFAULT_SORT: Record<Mode, { sort: string; dir: SortDir }> = {
   acute: { sort: "coverage_gap", dir: "desc" },

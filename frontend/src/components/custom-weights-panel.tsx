@@ -5,22 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CustomWeights } from "@/lib/api-types";
 import { mergeUrl } from "@/lib/url-state";
-import { SlidersHorizontal, ArrowDownUp, ShieldAlert, CircleAlert, RotateCcw, XCircle } from "lucide-react";
+import { SlidersHorizontal, CircleAlert, RotateCcw, XCircle } from "lucide-react";
 
 type Weights = { coverage: number; pin: number; chronic: number };
-
-function parseWeights(raw: string | null): Weights {
-  if (!raw) return { coverage: 0.34, pin: 0.33, chronic: 0.33 };
-  const out: Weights = { coverage: 0, pin: 0, chronic: 0 };
-  for (const tok of raw.split(",")) {
-    const [k, v] = tok.split(":");
-    if (!k || v == null) continue;
-    if (k === "coverage") out.coverage = Number(v);
-    if (k === "pin") out.pin = Number(v);
-    if (k === "chronic") out.chronic = Number(v);
-  }
-  return out;
-}
 
 function serializeWeights(w: Weights): string {
   const c = Math.round(w.coverage * 100) / 100;
@@ -138,7 +125,7 @@ export function CustomWeightsPanel({
             <CircleAlert className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <p>
               Custom weights use a <strong>linear composite</strong> to reorder crises; the default score is <strong>multiplicative</strong>.
-              Setting weights won't reproduce the default ranking.
+              Setting weights won&apos;t reproduce the default ranking.
             </p>
           </div>
           

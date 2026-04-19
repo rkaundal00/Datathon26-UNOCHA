@@ -23,7 +23,9 @@ export function ClientBriefing({
 
   useEffect(() => {
     if (!iso3) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(null);
       return;
     }
@@ -46,6 +48,7 @@ export function ClientBriefing({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [iso3, params.analysis_year, params.pin_floor, params.require_hrp, params.mode, params.weights, params.flags]);
 
   if (!iso3) {

@@ -99,7 +99,7 @@ export function GapScoreValueTooltip({
   const cov = Math.min(coverage, 1);
   return (
     <Tooltip
-      content={`(1 − ${cov.toFixed(3)}) × ${pinShare.toFixed(3)} = ${gap.toFixed(3)} — click for full decomposition`}
+      content={`(1 − ${cov.toFixed(2)}) × ${pinShare.toFixed(2)} = ${gap.toFixed(2)}`}
     >
       <span>{children}</span>
     </Tooltip>

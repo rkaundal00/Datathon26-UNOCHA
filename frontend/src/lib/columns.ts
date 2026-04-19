@@ -128,9 +128,9 @@ export const COLUMN_META: Record<ColumnKey, ColumnMeta> = {
   },
   unmet_need_usd: {
     key: "unmet_need_usd",
-    label: "Unmet need",
+    label: "Funding Gap",
     unitLabel: "(USD)",
-    displayLabel: "Unmet need (USD)",
+    displayLabel: "Funding Gap (USD)",
     className: "text-right",
     sortable: true,
     sources: ["FTS"],
