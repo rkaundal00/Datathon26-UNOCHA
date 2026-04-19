@@ -53,7 +53,7 @@ export function ScopeBanner({ meta }: { meta: RankingMeta }) {
             </button>
           </Popover.Trigger>
           <Popover.Portal>
-            <Popover.Content className="z-50 mt-2 rounded-lg border border-border bg-surface p-3 shadow-lg text-xs w-64" sideOffset={4}>
+            <Popover.Content className="z-50 mt-2 rounded-lg border border-border bg-surface p-3 shadow-lg text-xs w-64 popover-animate" sideOffset={4}>
               <p className="font-semibold mb-1">Data Assumptions</p>
               <ul className="list-disc pl-4 space-y-1 text-text-muted mt-2">
                 <li><strong>Denominator:</strong> People in Need (PIN)</li>
@@ -86,7 +86,7 @@ function PinFloorChip({
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="z-50 mt-2 min-w-[160px] rounded-lg border border-border bg-surface p-1 shadow-lg" sideOffset={4}>
+        <Popover.Content className="z-50 mt-2 min-w-[160px] rounded-lg border border-border bg-surface p-1 shadow-lg popover-animate" sideOffset={4}>
           <div className="px-2 py-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
             Minimum People in Need
           </div>
@@ -138,7 +138,7 @@ function YearChip({
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content className="z-50 mt-2 min-w-[140px] rounded-lg border border-border bg-surface p-1 shadow-lg" sideOffset={4}>
+        <Popover.Content className="z-50 mt-2 min-w-[140px] rounded-lg border border-border bg-surface p-1 shadow-lg popover-animate" sideOffset={4}>
           <div className="px-2 py-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
             Analysis Year
           </div>

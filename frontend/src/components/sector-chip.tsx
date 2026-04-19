@@ -31,7 +31,7 @@ export function SectorChip({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          className="z-[1000] mt-2 w-[260px] max-h-[380px] overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg"
+          className="z-[1000] mt-2 w-[260px] max-h-[380px] overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg popover-animate"
           sideOffset={4}
         >
           <div className="px-2 py-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">

@@ -248,6 +248,34 @@ input:focus-visible {
   }
 }
 
+/* Popover open/close animations */
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes popover-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+[data-state="open"].popover-animate {
+  animation: popover-in 400ms ease-out;
+}
+[data-state="closed"].popover-animate {
+  animation: popover-out 300ms ease-in;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -46,7 +46,7 @@ export function MapDropdown({
         <Select.Content
           position="popper"
           sideOffset={6}
-          className="z-[1000] overflow-hidden rounded-xl border border-border bg-surface/95 p-1 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)] backdrop-blur-md"
+          className="z-[1000] overflow-hidden rounded-xl border border-border bg-surface/95 p-1 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)] backdrop-blur-md popover-animate"
         >
           <Select.Viewport className="flex flex-col gap-0.5">
             {options.map((o) => (

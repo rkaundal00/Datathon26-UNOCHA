@@ -2,7 +2,7 @@
 
 import * as Slider from "@radix-ui/react-slider";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CustomWeights } from "@/lib/api-types";
 import { mergeUrl } from "@/lib/url-state";
 import { SlidersHorizontal, ArrowDownUp, ShieldAlert, CircleAlert, RotateCcw, XCircle } from "lucide-react";
@@ -132,8 +132,8 @@ export function CustomWeightsPanel({
         </span>
       </button>
       
-      {open && (
-        <div className="px-4 pb-4 pt-1 animate-in slide-in-from-top-2 fade-in duration-200 border-t border-border/50">
+      <AnimatedCollapse open={open}>
+        <div className="px-4 pb-4 pt-1 border-t border-border/50">
           <div className="mb-4 flex items-start gap-2 rounded-md bg-amber-500/10 p-2.5 text-amber-700 dark:text-amber-400 text-[11.5px] leading-relaxed">
             <CircleAlert className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <p>
@@ -186,7 +186,43 @@ export function CustomWeightsPanel({
             )}
           </div>
         </div>
-      )}
+      </AnimatedCollapse>
+    </div>
+  );
+}
+
+function AnimatedCollapse({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    if (open && contentRef.current) {
+      setHeight(contentRef.current.scrollHeight);
+    } else {
+      setHeight(0);
+    }
+  }, [open]);
+
+  // Update height if content changes while open
+  useEffect(() => {
+    if (!open || !contentRef.current) return;
+    const observer = new ResizeObserver(() => {
+      if (contentRef.current) setHeight(contentRef.current.scrollHeight);
+    });
+    observer.observe(contentRef.current);
+    return () => observer.disconnect();
+  }, [open]);
+
+  return (
+    <div
+      style={{
+        height,
+        opacity: open ? 1 : 0,
+        overflow: "hidden",
+        transition: "height 300ms ease, opacity 250ms ease",
+      }}
+    >
+      <div ref={contentRef}>{children}</div>
     </div>
   );
 }
