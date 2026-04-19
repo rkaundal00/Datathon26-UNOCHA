@@ -59,7 +59,7 @@ export function KeyboardShortcuts() {
           <Dialog.Description className="text-xs text-text-muted">
             Shortcuts are active when no input is focused.
           </Dialog.Description>
-          <div className="mt-3 grid text-sm" style={{ gridTemplateColumns: "80px 1fr" }}>
+          <div className="mt-3 grid text-sm" style={{ gridTemplateColumns: "110px 1fr" }}>
             <div className="pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Key</div>
             <div className="pb-1.5 pl-3 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Action</div>
             {SHORTCUTS.map((s, i) => (
