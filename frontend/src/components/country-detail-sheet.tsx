@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Tabs from "@radix-ui/react-tabs";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { CountryDetailResponse, DetailTab } from "@/lib/api-types";
 import { fetchCountry } from "@/lib/api";
@@ -20,6 +20,7 @@ export function CountryDetailSheet({
   params: Parameters<typeof fetchCountry>[1];
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [data, setData] = useState<CountryDetailResponse | null>(null);
 
@@ -42,14 +43,14 @@ export function CountryDetailSheet({
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
       detail: null,
     });
-    router.replace(`/?${qs}`, { scroll: false });
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   function setTab(tab: DetailTab) {
     const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
       detail: tab,
     });
-    router.replace(`/?${qs}`, { scroll: false });
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}`, { scroll: false });
   }
 
   if (!focusIso) return null;
@@ -57,9 +58,9 @@ export function CountryDetailSheet({
   return (
     <Dialog.Root open={open} onOpenChange={(o) => (!o && close())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Dialog.Content className="fixed left-1/2 bottom-0 z-50 h-[80vh] w-[min(960px,calc(100%-2rem))] -translate-x-1/2 rounded-t-lg border border-border bg-surface p-4 shadow-xl overflow-auto">
-          <div className="flex items-start justify-between">
+        <Dialog.Overlay className="fixed inset-0 z-[1000] bg-black/40" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-[1001] flex max-h-[80vh] w-[min(960px,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-border bg-surface p-4 shadow-xl">
+          <div className="flex shrink-0 items-start justify-between">
             <div>
               <Dialog.Title className="text-lg font-semibold">
                 {data?.country.country ?? focusIso}
@@ -73,9 +74,9 @@ export function CountryDetailSheet({
           <Tabs.Root
             value={openTab ?? "clusters"}
             onValueChange={(v) => setTab(v as DetailTab)}
-            className="mt-3"
+            className="mt-3 flex min-h-0 flex-1 flex-col"
           >
-            <Tabs.List className="mb-2 flex gap-2 border-b border-border">
+            <Tabs.List className="mb-2 flex shrink-0 gap-2 border-b border-border">
               {(
                 [
                   ["clusters", "Clusters"],
@@ -92,7 +93,7 @@ export function CountryDetailSheet({
                 </Tabs.Trigger>
               ))}
             </Tabs.List>
-            <Tabs.Content value="clusters">
+            <Tabs.Content value="clusters" className="overflow-auto">
               {data ? (
                 <ClusterDrilldown
                   clusters={data.clusters}
@@ -102,14 +103,14 @@ export function CountryDetailSheet({
                 <p className="text-sm text-text-muted py-6">Loading…</p>
               )}
             </Tabs.Content>
-            <Tabs.Content value="trend">
+            <Tabs.Content value="trend" className="overflow-auto">
               {data ? (
                 <TrendView trend={data.trend} year={data.meta.analysis_year} />
               ) : (
                 <p className="text-sm text-text-muted py-6">Loading…</p>
               )}
             </Tabs.Content>
-            <Tabs.Content value="population">
+            <Tabs.Content value="population" className="overflow-auto">
               {data ? (
                 <ClusterDrilldown
                   clusters={[]}

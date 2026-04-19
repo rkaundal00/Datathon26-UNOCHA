@@ -241,10 +241,8 @@ input:focus-visible {
 }
 @media (prefers-color-scheme: dark) {
   .continent-label > span {
-    color: rgba(168, 205, 199, 0.55);
-    text-shadow:
-      0 0 6px rgba(0, 0, 0, 0.7),
-      0 0 4px rgba(0, 0, 0, 0.7);
+    color: rgba(80, 80, 80, 0.95);
+    text-shadow: none;
   }
 }
 
