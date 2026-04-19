@@ -8,7 +8,6 @@ import type { Mode } from "@/lib/api-types";
 
 const SHORTCUTS: { key: string; action: string }[] = [
   { key: "1 / 2 / 3", action: "Switch mode — Acute / Structural / Combined" },
-  { key: "a / b", action: "Switch scatter chart view" },
   { key: "e", action: "Export current view as CSV" },
   { key: "u", action: "Copy shareable URL" },
   { key: "Esc", action: "Close dialog / clear focus" },
@@ -42,13 +41,6 @@ export function KeyboardShortcuts() {
         });
         router.replace(`/?${qs}`, { scroll: false });
         return;
-      }
-      if (e.key === "a" || e.key === "b") {
-        e.preventDefault();
-        const qs = mergeUrl(new URLSearchParams(searchParams.toString()), {
-          scatter: e.key,
-        });
-        router.replace(`/?${qs}`, { scroll: false });
       }
       if (e.key === "Escape") {
         if (overlay) setOverlay(false);
