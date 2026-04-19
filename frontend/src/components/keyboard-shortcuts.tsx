@@ -7,12 +7,11 @@ import { mergeUrl } from "@/lib/url-state";
 import type { Mode } from "@/lib/api-types";
 
 const SHORTCUTS: { key: string; action: string }[] = [
-  { key: "1 / 2 / 3", action: "Switch mode: Acute / Structural / Combined" },
-  { key: "a / b", action: "Switch scatter A ↔ B" },
-  { key: "w", action: "Toggle custom weights panel (URL ?weights=…)" },
-  { key: "e", action: "Export CSV" },
-  { key: "u", action: "Copy current URL" },
-  { key: "Esc", action: "Close open dialog or clear focus" },
+  { key: "1 / 2 / 3", action: "Switch mode — Acute / Structural / Combined" },
+  { key: "a / b", action: "Switch scatter chart view" },
+  { key: "e", action: "Export current view as CSV" },
+  { key: "u", action: "Copy shareable URL" },
+  { key: "Esc", action: "Close dialog / clear focus" },
   { key: "?", action: "Show this overlay" },
 ];
 
@@ -62,22 +61,28 @@ export function KeyboardShortcuts() {
   return (
     <Dialog.Root open={overlay} onOpenChange={setOverlay}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/40" />
-        <Dialog.Content className="fixed inset-1/2 z-50 w-96 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface p-4 shadow-xl">
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/70" />
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-96 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-surface-2 p-4 shadow-xl">
           <Dialog.Title className="text-lg font-semibold">Keyboard shortcuts</Dialog.Title>
           <Dialog.Description className="text-xs text-text-muted">
             Shortcuts are active when no input is focused.
           </Dialog.Description>
-          <ul className="mt-3 space-y-1 text-sm">
-            {SHORTCUTS.map((s) => (
-              <li key={s.key} className="flex justify-between">
-                <kbd className="rounded border border-border bg-surface-2 px-2 py-0.5 font-mono text-xs">
-                  {s.key}
-                </kbd>
-                <span className="text-text-muted">{s.action}</span>
-              </li>
+          <div className="mt-3 grid text-sm" style={{ gridTemplateColumns: "80px 1fr" }}>
+            <div className="pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Key</div>
+            <div className="pb-1.5 pl-3 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Action</div>
+            {SHORTCUTS.map((s, i) => (
+              <>
+                <div key={`key-${s.key}`} className={`flex items-center py-1 pr-2 ${i % 2 === 0 ? "bg-surface-2/50" : ""} rounded-l`}>
+                  <kbd className="rounded border border-border bg-surface-2 px-2 py-0.5 font-mono text-xs">
+                    {s.key}
+                  </kbd>
+                </div>
+                <div key={`action-${s.key}`} className={`flex items-center border-l border-border py-1 pl-3 ${i % 2 === 0 ? "bg-surface-2/50" : ""} rounded-r`}>
+                  <span>{s.action}</span>
+                </div>
+              </>
             ))}
-          </ul>
+          </div>
           <Dialog.Close className="mt-3 rounded border border-border px-3 py-1 text-sm hover:bg-surface-2">
             Close
           </Dialog.Close>
