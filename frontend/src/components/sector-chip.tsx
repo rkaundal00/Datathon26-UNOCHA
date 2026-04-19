@@ -31,7 +31,7 @@ export function SectorChip({
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
-          className="z-[1000] mt-2 w-[260px] max-h-[380px] overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg popover-animate"
+          className="z-[1000] mt-2 w-[310px] max-h-[380px] overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-lg popover-animate"
           sideOffset={4}
         >
           <div className="px-2 py-1.5 text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
@@ -68,11 +68,11 @@ export function SectorChip({
                     setOpen(false);
                   }}
                 >
-                  <span>
-                    {opt.name}
-                    <span className="ml-1.5 text-[10px] text-text-muted">{opt.code}</span>
+                  <span className="truncate">{opt.name}</span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <span className="text-[10px] text-text-muted">{opt.code}</span>
+                    {value === opt.code && <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>}
                   </span>
-                  {value === opt.code && <div className="h-1.5 w-1.5 rounded-full bg-accent"></div>}
                 </button>
               );
             })}
