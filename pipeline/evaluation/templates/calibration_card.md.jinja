@@ -115,25 +115,31 @@ _Cases where the composite departs from its loudest component._
 - That ranking changes between runs are errors — `data_freshness` shifts with FTS
   revisions.
 
-## 8. Fallback scoring (rescued rows)
+## 8. Watch list (data-too-sparse rows)
 
-_Rows that fail the strict cohort filter but are included via a sanctioned
-fallback rule. Every rescued row carries the corresponding QA flag so the rescue
-is auditable per-row in the API and the data-coverage modal._
+_Countries with an FTS appeal but missing the HNO PIN or COD-PS population
+needed for the upstream `(0.5 × pin_share + 0.5 × norm_log10(pin))` need axis.
+Surfaced separately from the ranked table so the gap_score column stays
+apples-to-apples — assigning these rows a fabricated gap_score (e.g. on a
+severity proxy) would mix incomparable scores in the same column and mislead a
+coordinator sorting by it._
 
-Total rescued: **{{ fallback_total }}** rows for analysis year {{ analysis_year }}.
+Watch-list size: **{{ fallback_total }}** rows for analysis year {{ analysis_year }}.
+Sorted by INFORM Severity desc in the API and the data-coverage modal.
 
-| QA flag | What it means | Math (composite branch) | Count | Examples |
+| QA flag | What's missing | Evidence shown in the watch list | Count | Examples |
 |---|---|---|---|---|
-| `fts_year_fallback` | Analysis-year FTS requirements = 0 and prior year > 0; prior-year requirements, funding, and `hrp_status` substitute. | unchanged blended formula: `(1 − min(coverage, 1)) × (0.5 × pin_share + 0.5 × norm_log10(pin))` — uses prior-year FTS. | {{ fts_year_fallback_count }} | {{ fts_year_fallback_examples }} |
-| `population_unavailable` | COD-PS has no row for this ISO3 (or no reference year ≤ analysis year). The population gate is dropped. PIN survives. | `(1 − min(coverage, 1)) × (severity_inform / 10)` — `pin_share` is undefined without a population denominator. Per-capita derivations are not valid for this row. | {{ population_unavailable_count }} | {{ population_unavailable_examples }} |
-| `need_proxy_inform` | HNO PIN is unavailable for both analysis year and prior year (or co-occurs with `population_unavailable`). | `(1 − min(coverage, 1)) × (severity_inform / 10)` — `severity_inform` is the March 2026 INFORM Severity Index, country-level (1–10 → 0–1). | {{ need_proxy_inform_count }} | {{ need_proxy_inform_examples }} |
+| `fts_year_fallback` | Analysis-year FTS requirements = 0; prior-year requirements, funding, and `hrp_status` substitute. | Requirements, funding, coverage, unmet (from the prior year). | {{ fts_year_fallback_count }} | {{ fts_year_fallback_examples }} |
+| `population_unavailable` | COD-PS has no row for this ISO3 (or no reference year ≤ analysis year). PIN survives. | INFORM Severity, requirements, funding, coverage, unmet. `pin_share` cannot be computed. | {{ population_unavailable_count }} | {{ population_unavailable_examples }} |
+| `need_proxy_inform` | HNO PIN is unavailable for both analysis year and prior year. | INFORM Severity, requirements, funding, coverage, unmet. | {{ need_proxy_inform_count }} | {{ need_proxy_inform_examples }} |
 
-**Reading.** A rescued row is in-cohort and ranked alongside strict-cohort rows.
-The QA flag chip identifies the rescue rule(s) applied. Rows that fail BOTH the
-strict filter AND every rescue rule remain in the **Excluded** bucket and surface
-in the data-coverage modal with their `exclusion_reason` enum value. The custom
-linear composite uses the same need-axis substitution when `pin_share` is null.
+**Reading.** Rows on the watch list are deliberately **not** scored — there is no
+`gap_score` field on the watch-list response. A coordinator reads them on their
+own evidence (severity, requirements, coverage, unmet) and the QA flag chip
+identifies which data is missing. Rows that fail the strict filter AND every
+rescue rule remain in the **Excluded** bucket with their `exclusion_reason`. The
+ranked table contains only strict-cohort rows; every score in that column is
+computed by the same upstream blend.
 
 ## 9. Reproducibility
 

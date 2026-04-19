@@ -41,7 +41,11 @@ export default async function Page(props: {
             </div>
           </div>
           <div className="flex items-center gap-3 text-xs">
-            <DataCoverageAnchor params={apiParams} excludedCount={ranking.meta.excluded_count} />
+            <DataCoverageAnchor
+              params={apiParams}
+              excludedCount={ranking.meta.excluded_count}
+              fallbackCount={ranking.meta.fallback_count}
+            />
             <MethodologyButton />
           </div>
         </div>

@@ -70,10 +70,10 @@ def get_coverage(
             iso3=r["iso3"],
             country=r["country"],
             qa_flags=list(r["qa_flags"]),
-            gap_score=float(r["gap_score"]),
             requirements_usd=int(r.get("requirements_usd") or 0),
             funding_usd=int(r.get("funding_usd") or 0),
             coverage_ratio=r.get("coverage_ratio"),
+            unmet_need_usd=int(r.get("unmet_need_usd") or 0),
             inform_severity=r.get("inform_severity"),
         )
         for r in fallback_raw
@@ -101,6 +101,7 @@ def get_coverage(
         weights=parsed_weights,
         total_count=total,
         excluded_count=excluded_count,
+        fallback_count=len(fallback),
     )
     return CoverageResponse(
         meta=meta,

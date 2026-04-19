@@ -94,6 +94,7 @@ export interface RankingMeta {
   weights: CustomWeights | null;
   total_count: number;
   excluded_count: number;
+  fallback_count: number;
   data_freshness: string;
   sector: string | null;
   available_sectors: SectorOption[];
@@ -199,10 +200,10 @@ export interface InCohortFallbackRow {
   iso3: string;
   country: string;
   qa_flags: QAFlag[];
-  gap_score: number;
   requirements_usd: number;
   funding_usd: number;
   coverage_ratio: number | null;
+  unmet_need_usd: number;
   inform_severity: number | null;
 }
 

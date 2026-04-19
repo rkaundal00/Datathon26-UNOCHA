@@ -192,11 +192,13 @@ def build_country_year_table(
     pin_floor: int = DEFAULT_PIN_FLOOR,
     require_hrp: bool = DEFAULT_REQUIRE_HRP,
 ) -> pl.DataFrame:
-    """One row per in-cohort country for `analysis_year`. Sorted by gap_score desc.
+    """One row per **strict-cohort** country for `analysis_year`. Sorted by gap_score desc.
 
-    Includes rescue rows (countries missing PIN and/or population) when INFORM
-    Severity is available. Each rescue row carries the relevant QA flag(s):
-    fts_year_fallback, population_unavailable, need_proxy_inform.
+    Strict cohort only — rows missing PIN or COD-PS population are surfaced
+    separately via `in_cohort_fallback_table()` because their need-axis math
+    differs from the upstream blend `0.5 × pin_share + 0.5 × norm_log10(pin)`.
+    Mixing them into the ranked table would put incomparable scores in the
+    same column.
     """
     appeals = _cached_appeals()
     admin0 = _cached_admin0()
@@ -259,6 +261,11 @@ def build_country_year_table(
             valid_types=valid_types,
         )
         if not in_cohort:
+            continue
+        if rescue_flags:
+            # Rescued rows leave the ranked table — they appear in
+            # `in_cohort_fallback_table()` instead so the gap_score column stays
+            # apples-to-apples across all rows it contains.
             continue
         r["_rescue_flags"] = rescue_flags
         kept.append(r)
@@ -544,36 +551,107 @@ def in_cohort_fallback_table(
     pin_floor: int = DEFAULT_PIN_FLOOR,
     require_hrp: bool = DEFAULT_REQUIRE_HRP,
 ) -> pl.DataFrame:
-    """Rows rescued into cohort by a fallback rule (FTS year / INFORM proxy / no population)."""
-    table = build_country_year_table(analysis_year, pin_floor, require_hrp)
+    """Watch-list of rows that pass a rescue rule but cannot be scored on the
+    same axis as the strict cohort.
+
+    Each row is a country with an FTS appeal but missing PIN or COD-PS
+    population. These cannot be ranked alongside strict-cohort rows because the
+    upstream `0.5 × pin_share + 0.5 × norm_log10(pin)` need axis is undefined.
+    The watch list surfaces them with their auditable evidence (severity,
+    requirements, funding, unmet) so a coordinator can judge them on the data
+    that exists, without contaminating the ranked column with mixed-formula
+    scores. Sorted by INFORM Severity desc.
+    """
+    appeals = _cached_appeals()
+    admin0 = _cached_admin0()
+
+    hno, _ = _hno_with_fallback(analysis_year)
+    population = _nearest_population(admin0, analysis_year)
+    names = _cached_country_names()
+    fts_agg, hrp = _fts_with_year_fallback(appeals, analysis_year)
+    inform_severity = _cached_inform_severity()
+
+    universe = (
+        pl.concat(
+            [hno.select("iso3"), fts_agg.filter(pl.col("requirements_usd") > 0).select("iso3")],
+            how="vertical",
+        )
+        .unique()
+        .drop_nulls()
+    )
+
+    df = (
+        universe.join(hno, on="iso3", how="left")
+        .join(names, on="iso3", how="left")
+        .join(population, on="iso3", how="left")
+        .join(fts_agg, on="iso3", how="left")
+        .join(hrp, on="iso3", how="left")
+        .join(inform_severity, on="iso3", how="left")
+    )
+    df = df.with_columns(
+        pl.col("requirements_usd").fill_null(0.0),
+        pl.col("funding_usd").fill_null(0.0),
+        pl.col("hrp_status").fill_null("None"),
+        pl.col("fts_year_fallback").fill_null(False),
+    )
+    if "inform_country" in df.columns:
+        df = df.with_columns(
+            pl.coalesce([pl.col("country"), pl.col("inform_country"), pl.col("iso3")]).alias("country")
+        )
+    else:
+        df = df.with_columns(pl.col("country").fill_null(pl.col("iso3")))
+
+    valid_types = STRICT_HRP_TYPES if require_hrp else ANY_HRP_TYPES
+
     rows = []
-    for r in table.to_dicts():
-        fallback_flags = [f for f in r["qa_flags"] if f in FALLBACK_FLAGS]
-        if not fallback_flags:
+    for r in df.to_dicts():
+        in_cohort, rescue_flags = _classify_in_cohort(
+            pin=r.get("pin"),
+            population=r.get("population"),
+            requirements_usd=r.get("requirements_usd"),
+            hrp_status=r.get("hrp_status", "None"),
+            inform_severity=r.get("inform_severity"),
+            pin_floor=pin_floor,
+            valid_types=valid_types,
+        )
+        if not in_cohort or not rescue_flags:
             continue
+
+        all_flags = list(rescue_flags)
+        if r.get("fts_year_fallback") and "fts_year_fallback" not in all_flags:
+            all_flags.append("fts_year_fallback")
+
+        reqs = float(r.get("requirements_usd") or 0)
+        funds = float(r.get("funding_usd") or 0)
+        cov = funds / reqs if reqs > 0 else None
+        unmet = max(reqs - funds, 0.0)
+
         rows.append(
             {
                 "iso3": r["iso3"],
-                "country": r["country"],
-                "qa_flags": fallback_flags,
-                "gap_score": float(r["gap_score"]),
-                "requirements_usd": int(r["requirements_usd"] or 0),
-                "funding_usd": int(r["funding_usd"] or 0),
-                "coverage_ratio": float(r["coverage_ratio"]) if r.get("coverage_ratio") is not None else None,
+                "country": r.get("country") or r["iso3"],
+                "qa_flags": sorted(all_flags),
+                "requirements_usd": int(reqs),
+                "funding_usd": int(funds),
+                "coverage_ratio": cov,
+                "unmet_need_usd": int(unmet),
                 "inform_severity": float(r["inform_severity"]) if r.get("inform_severity") is not None else None,
             }
         )
+
     if not rows:
         return pl.DataFrame(
             schema={
                 "iso3": pl.Utf8,
                 "country": pl.Utf8,
                 "qa_flags": pl.List(pl.Utf8),
-                "gap_score": pl.Float64,
                 "requirements_usd": pl.Int64,
                 "funding_usd": pl.Int64,
                 "coverage_ratio": pl.Float64,
+                "unmet_need_usd": pl.Int64,
                 "inform_severity": pl.Float64,
             }
         )
-    return pl.DataFrame(rows).sort("gap_score", descending=True)
+    return pl.DataFrame(rows).sort(
+        "inform_severity", descending=True, nulls_last=True
+    )

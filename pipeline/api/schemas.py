@@ -103,6 +103,7 @@ class RankingMeta(BaseModel):
     weights: CustomWeights | None = None
     total_count: int
     excluded_count: int
+    fallback_count: int = 0
     data_freshness: str  # ISO 8601
     sector: str | None = None
     available_sectors: list[SectorOption] = Field(default_factory=list)
@@ -214,13 +215,17 @@ class InCohortFlaggedRow(BaseModel):
 
 
 class InCohortFallbackRow(BaseModel):
+    """Watch-list entry — surfaced separately from the ranked table because the
+    upstream gap_score blend cannot be computed for these rows. No `gap_score`
+    field by design: scores would not be apples-to-apples with the ranked
+    table's strict-cohort scores."""
     iso3: str
     country: str
     qa_flags: list[QAFlag]
-    gap_score: float
     requirements_usd: int
     funding_usd: int
     coverage_ratio: float | None = None
+    unmet_need_usd: int = 0
     inform_severity: float | None = None
 
 

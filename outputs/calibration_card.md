@@ -56,27 +56,30 @@ between years because the amended cohort filter always excludes `hrp_status='Non
 
 | Class | Count | Share |
 |---|---|---|
-| cohort_exit | 1 | 2% |
-| data_grounded | 40 | 75% |
-| methodology_sensitive | 7 | 13% |
-| noise | 5 | 9% |
+| cohort_entry | 3 | 16% |
+| cohort_exit | 1 | 5% |
+| data_grounded | 12 | 63% |
+| methodology_sensitive | 3 | 16% |
 
 
 **Largest movers (top 5 by |Δrank|, among iso3s ranked in both years):**
 
 | Country | Rank 2024 | Rank 2025 | Δ | Class | Rationale |
 |---|---|---|---|---|---|
-| Pakistan | 52 | 11 | -41 | data_grounded | Coverage shifted from 110% to 44% |
-| Costa Rica | 53 | 18 | -35 | data_grounded | Coverage shifted from 187% to 6% |
-| Libya | 44 | 9 | -35 | data_grounded | Coverage shifted from 106% to 32% |
-| Syria | 4 | 39 | 35 | data_grounded | Coverage shifted from 49% to 85% |
-| Yemen | 51 | 17 | -34 | data_grounded | Coverage shifted from 102% to 56% |
+| Ethiopia | 2 | 18 | 16 | data_grounded | Coverage shifted from 34% to 179% |
+| Sudan | 9 | 1 | -8 | data_grounded | PIN rose 23% |
+| Chad | 16 | 9 | -7 | data_grounded | PIN rose 17% |
+| Guatemala | 11 | 16 | 5 | data_grounded | PIN fell 59% |
+| South Sudan | 10 | 5 | -5 | data_grounded | Coverage shifted from 79% to 54% |
 
 
 **Cohort transitions (sample of up to 5 each way):**
 
 | Country | 2024 → 2025 | Specific reason |
 |---|---|---|
+| Cameroon | excluded → ranked | Appeared in 2025 cohort: appeared in 2025 ranking (no prior excluded record) |
+| Colombia | excluded → ranked | Appeared in 2025 cohort: appeared in 2025 ranking (no prior excluded record) |
+| Mozambique | excluded → ranked | Appeared in 2025 cohort: appeared in 2025 ranking (no prior excluded record) |
 | El Salvador | ranked → excluded | Dropped from 2025 cohort: dropped from 2025 ranking |
 
 
@@ -86,11 +89,11 @@ _Cases where the composite departs from its loudest component._
 
 | Country | rank_gap | rank_unmet | rank_pinshare | rank_coverage_gap | What the composite is doing |
 |---|---|---|---|---|---|
-| Myanmar | 6 | 7 | 3 | 24 | Myanmar ranks above its position on absolute unmet need — the composite is weighted toward proportional burden (pin_share) here. |
-| Rwanda | 21 | 39 | 22 | 25 | Rwanda ranks higher on the composite than on either absolute unmet need or proportional burden alone — the composite is combining moderate signals across both axes. |
-| Uganda | 10 | 12 | 6 | 8 | Uganda ranks above its position on absolute unmet need — the composite is weighted toward proportional burden (pin_share) here. |
-| Peru | 7 | 24 | 10 | 6 | Peru ranks higher on the composite than on either absolute unmet need or proportional burden alone — the composite is combining moderate signals across both axes. |
-| Burundi | 16 | 35 | 19 | 29 | Burundi ranks higher on the composite than on either absolute unmet need or proportional burden alone — the composite is combining moderate signals across both axes. |
+| Haiti | 3 | 7 | 4 | 8 | Haiti ranks higher on the composite than on either absolute unmet need or proportional burden alone — the composite is combining moderate signals across both axes. |
+| Niger | 15 | 14 | 16 | 12 | Niger ranks above its position on proportional burden alone — the coverage gap is doing the lifting. |
+| Sudan | 1 | 1 | 2 | 13 | Sudan ranks above its position on proportional burden alone — the coverage gap is doing the lifting. |
+| Guatemala | 16 | 17 | 14 | 15 | Guatemala ranks above its position on absolute unmet need — the composite is weighted toward proportional burden (pin_share) here. |
+| Afghanistan | 2 | 3 | 3 | 16 | Afghanistan ranks higher on the composite than on either absolute unmet need or proportional burden alone — the composite is combining moderate signals across both axes. |
 
 
 ## 6. Known limitations
@@ -126,25 +129,31 @@ _Cases where the composite departs from its loudest component._
 - That ranking changes between runs are errors — `data_freshness` shifts with FTS
   revisions.
 
-## 8. Fallback scoring (rescued rows)
+## 8. Watch list (data-too-sparse rows)
 
-_Rows that fail the strict cohort filter but are included via a sanctioned
-fallback rule. Every rescued row carries the corresponding QA flag so the rescue
-is auditable per-row in the API and the data-coverage modal._
+_Countries with an FTS appeal but missing the HNO PIN or COD-PS population
+needed for the upstream `(0.5 × pin_share + 0.5 × norm_log10(pin))` need axis.
+Surfaced separately from the ranked table so the gap_score column stays
+apples-to-apples — assigning these rows a fabricated gap_score (e.g. on a
+severity proxy) would mix incomparable scores in the same column and mislead a
+coordinator sorting by it._
 
-Total rescued: **34** rows for analysis year 2025.
+Watch-list size: **34** rows for analysis year 2025.
+Sorted by INFORM Severity desc in the API and the data-coverage modal.
 
-| QA flag | What it means | Math (composite branch) | Count | Examples |
+| QA flag | What's missing | Evidence shown in the watch list | Count | Examples |
 |---|---|---|---|---|
-| `fts_year_fallback` | Analysis-year FTS requirements = 0 and prior year > 0; prior-year requirements, funding, and `hrp_status` substitute. | unchanged blended formula: `(1 − min(coverage, 1)) × (0.5 × pin_share + 0.5 × norm_log10(pin))` — uses prior-year FTS. | 2 | MDG, IRQ |
-| `population_unavailable` | COD-PS has no row for this ISO3 (or no reference year ≤ analysis year). The population gate is dropped. PIN survives. | `(1 − min(coverage, 1)) × (severity_inform / 10)` — `pin_share` is undefined without a population denominator. Per-capita derivations are not valid for this row. | 5 | MMR, CAF, YEM, UKR, SYR |
-| `need_proxy_inform` | HNO PIN is unavailable for both analysis year and prior year (or co-occurs with `population_unavailable`). | `(1 − min(coverage, 1)) × (severity_inform / 10)` — `severity_inform` is the March 2026 INFORM Severity Index, country-level (1–10 → 0–1). | 34 | IRN, TUR, LBN, ECU, ZWE, MMR |
+| `fts_year_fallback` | Analysis-year FTS requirements = 0; prior-year requirements, funding, and `hrp_status` substitute. | Requirements, funding, coverage, unmet (from the prior year). | 2 | IRQ, MDG |
+| `population_unavailable` | COD-PS has no row for this ISO3 (or no reference year ≤ analysis year). PIN survives. | INFORM Severity, requirements, funding, coverage, unmet. `pin_share` cannot be computed. | 5 | YEM, UKR, SYR, MMR, CAF |
+| `need_proxy_inform` | HNO PIN is unavailable for both analysis year and prior year. | INFORM Severity, requirements, funding, coverage, unmet. | 34 | YEM, UKR, SYR, MMR, PSE, PAK |
 
-**Reading.** A rescued row is in-cohort and ranked alongside strict-cohort rows.
-The QA flag chip identifies the rescue rule(s) applied. Rows that fail BOTH the
-strict filter AND every rescue rule remain in the **Excluded** bucket and surface
-in the data-coverage modal with their `exclusion_reason` enum value. The custom
-linear composite uses the same need-axis substitution when `pin_share` is null.
+**Reading.** Rows on the watch list are deliberately **not** scored — there is no
+`gap_score` field on the watch-list response. A coordinator reads them on their
+own evidence (severity, requirements, coverage, unmet) and the QA flag chip
+identifies which data is missing. Rows that fail the strict filter AND every
+rescue rule remain in the **Excluded** bucket with their `exclusion_reason`. The
+ranked table contains only strict-cohort rows; every score in that column is
+computed by the same upstream blend.
 
 ## 9. Reproducibility
 

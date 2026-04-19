@@ -13,9 +13,11 @@ import { Badge } from "@/components/ui/badge";
 export function DataCoverageAnchor({
   params,
   excludedCount,
+  fallbackCount,
 }: {
   params: Parameters<typeof fetchCoverage>[0];
   excludedCount: number;
+  fallbackCount?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<CoverageResponse | null>(null);
@@ -45,7 +47,11 @@ export function DataCoverageAnchor({
           id="data-coverage-modal"
           className="text-xs text-text-muted underline hover:text-text"
         >
-          {excludedCount} crises excluded — [review]
+          {excludedCount} excluded
+          {fallbackCount != null && fallbackCount > 0 && (
+            <> · {fallbackCount} on watch list</>
+          )}
+          {" "}— [review]
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
@@ -55,8 +61,8 @@ export function DataCoverageAnchor({
             <div>
               <Dialog.Title className="text-lg font-semibold">Data coverage</Dialog.Title>
               <Dialog.Description className="text-xs text-text-muted">
-                Countries rescued via a fallback rule, in-cohort rows carrying QA flags,
-                and rows that remain excluded.
+                Watch-list crises (data too sparse to score on the same axis as the ranking),
+                in-cohort rows carrying QA flags, and rows that remain excluded.
               </Dialog.Description>
             </div>
             <Dialog.Close className="rounded p-1 text-text-muted hover:bg-surface-2">✕</Dialog.Close>
@@ -68,7 +74,7 @@ export function DataCoverageAnchor({
                   value="fallback"
                   className="border-b-2 border-transparent px-3 py-1.5 text-sm data-[state=active]:border-accent data-[state=active]:text-text"
                 >
-                  Included via fallback ({(data.in_cohort_fallback ?? []).length})
+                  Watch list ({(data.in_cohort_fallback ?? []).length})
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   value="flagged"
@@ -149,17 +155,18 @@ function FallbackTable({ rows }: { rows: InCohortFallbackRow[] }) {
   if (rows.length === 0) {
     return (
       <p className="text-xs text-text-muted">
-        No rows are in cohort via a fallback rule for the current scope.
+        No watch-list rows for the current scope.
       </p>
     );
   }
   return (
     <div className="space-y-2">
       <p className="text-xs text-text-muted leading-relaxed">
-        These countries failed the strict cohort filter (missing HNO PIN, COD-PS population,
-        or 2026 FTS appeal) but are included by a sanctioned fallback rule. Each row shows
-        which fallback fired and the rescued gap score. See the calibration card §9 for the
-        scoring math.
+        These countries have an FTS appeal but lack the HNO People-in-Need or COD-PS
+        population needed for the ranking&apos;s blended need axis. They are intentionally{" "}
+        <strong className="text-text">not</strong> assigned a gap score — that would put
+        an incomparable number in the same column. Sorted by INFORM Severity. Judge each
+        row on the evidence below; verify with the source flag tooltips.
       </p>
       <ul className="text-xs divide-y divide-border rounded border border-border">
         {rows.map((r) => (
@@ -170,23 +177,23 @@ function FallbackTable({ rows }: { rows: InCohortFallbackRow[] }) {
                 <span className="text-text-muted text-[11px]">({r.iso3})</span>
               </span>
               <div className="flex gap-2 text-[11px] text-text-muted mt-0.5 flex-wrap">
-                <span title="Rescued gap score">
-                  Score: <span className="text-text">{r.gap_score.toFixed(3)}</span>
+                <span title="INFORM Severity (March 2026, country-level)">
+                  Severity:{" "}
+                  <span className="text-text">
+                    {r.inform_severity != null ? r.inform_severity.toFixed(1) : "—"}/10
+                  </span>
                 </span>
-                <span title="Funding Requirements">
+                <span title="FTS Funding Requirements">
                   Reqs: <span className="text-text">{usdCompact(r.requirements_usd)}</span>
                 </span>
-                <span title="Funding Coverage">
+                <span title="FTS Funding Received / Requirements">
                   Cov:{" "}
                   <span className="text-text">
                     {r.coverage_ratio != null ? percent(r.coverage_ratio) : "—"}
                   </span>
                 </span>
-                <span title="INFORM Severity">
-                  Severity:{" "}
-                  <span className="text-text">
-                    {r.inform_severity != null ? r.inform_severity.toFixed(1) : "—"}/10
-                  </span>
+                <span title="Requirements − Funding (FTS)">
+                  Unmet: <span className="text-text">{usdCompact(r.unmet_need_usd)}</span>
                 </span>
               </div>
             </div>

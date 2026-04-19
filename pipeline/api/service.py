@@ -119,6 +119,7 @@ def make_meta(
     weights: CustomWeights | None,
     total_count: int,
     excluded_count: int,
+    fallback_count: int = 0,
     sector: str | None = None,
 ) -> RankingMeta:
     options = [SectorOption(**opt) for opt in available_sectors_meta(analysis_year)]
@@ -132,6 +133,7 @@ def make_meta(
         weights=weights,
         total_count=total_count,
         excluded_count=excluded_count,
+        fallback_count=fallback_count,
         data_freshness=_datasets_freshness(),
         sector=sector,
         available_sectors=options,

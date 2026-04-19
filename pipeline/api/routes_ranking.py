@@ -9,6 +9,7 @@ from pipeline.api.schemas import RankingResponse
 from pipeline.api.service import (
     MODE_DEFAULT_SORT,
     SORTABLE_COLUMNS,
+    build_fallback_rows,
     build_ranking_rows,
     filter_rows_by_flags,
     make_meta,
@@ -70,6 +71,10 @@ def get_ranking(
     if flags:
         rows = filter_rows_by_flags(rows, [f.strip() for f in flags.split(",") if f.strip()])
 
+    fallback_count = len(build_fallback_rows(
+        analysis_year=analysis_year, pin_floor=pin_floor, require_hrp=require_hrp,
+    ))
+
     meta = make_meta(
         analysis_year=analysis_year,
         pin_floor=pin_floor,
@@ -80,6 +85,7 @@ def get_ranking(
         weights=parsed_weights,
         total_count=total,
         excluded_count=excluded,
+        fallback_count=fallback_count,
         sector=sector,
     )
     return RankingResponse(meta=meta, rows=rows)
