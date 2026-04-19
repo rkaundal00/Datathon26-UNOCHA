@@ -71,7 +71,7 @@ export function BriefingNote({ detail }: { detail: CountryDetailResponse }) {
         />
         <Fact label="Funding gap" value={usdCompact(fact.unmet_need_usd)} />
         <Fact
-          label="Chronic underfunding"
+          label="Years of underfunding"
           value={
             <span className="inline-flex items-center gap-1">
               <ChronicDots value={fact.chronic_years} />

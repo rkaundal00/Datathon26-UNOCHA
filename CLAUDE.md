@@ -90,7 +90,7 @@ Committed defaults. Override **explicitly at the call site** if you deviate, and
 - **Missing funding:** treated as 0 for ratio math; `funding_imputed_zero` QA flag attaches when requirements > 0 and funding is null/0.
 - **Need denominator:** PIN. `Targeted` / `Affected` appear only in explicit sector contexts — never as silent swaps.
 - **Cohort default:** `PIN ≥ 1M ∧ hrp_status ∈ {HRP, FlashAppeal, RegionalRP} ∧ requirements_usd > 0`. Tunable via the scope banner; always surfaces the exclusion count next to it.
-- **Chronic-year threshold:** `coverage < 0.5`, strict consecutive backward from `analysis_year − 1`. Only counts the 3rd+ consecutive underfunded year; capped at 5 total. Missing-year or ≥0.5-year breaks the chain.
+- **Chronic-year threshold:** `coverage < 0.5`, strict consecutive backward from `analysis_year − 1`. Capped at 5. Missing-year or ≥0.5-year breaks the chain.
 
 ## Composites
 
