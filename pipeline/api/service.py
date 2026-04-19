@@ -517,26 +517,7 @@ def rows_to_csv(rows: list[CountryRow]) -> str:
     import csv
     import io
 
-    fields = [
-        "iso3",
-        "country",
-        "analysis_year",
-        "pin",
-        "population",
-        "population_reference_year",
-        "pin_share",
-        "requirements_usd",
-        "funding_usd",
-        "coverage_ratio",
-        "unmet_need_usd",
-        "gap_score",
-        "custom_gap_score",
-        "chronic_years",
-        "donor_concentration",
-        "hrp_status",
-        "hno_year",
-        "qa_flags",
-    ]
+    fields = list(CountryRow.model_fields.keys())
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=fields, lineterminator="\n")
     writer.writeheader()
