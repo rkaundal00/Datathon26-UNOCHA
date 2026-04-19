@@ -3,18 +3,11 @@ from __future__ import annotations
 
 import math
 
-# Fixed bounds for log10(PIN) normalization.
-# PIN floor is 1 000 000 → log10 = 6.  Practical ceiling ≈ 200 000 000 → log10 ≈ 8.3.
-_LOG_PIN_MIN = 6.0   # log10(1_000_000)
-_LOG_PIN_MAX = 8.3   # log10(~200_000_000)
-
-
 def _norm_log_pin(pin: int | float) -> float:
-    """Normalize log10(pin) to [0, 1] using fixed bounds."""
+    """Return log10(pin)."""
     if pin <= 0:
         return 0.0
-    v = math.log10(max(pin, 1))
-    return max(0.0, min(1.0, (v - _LOG_PIN_MIN) / (_LOG_PIN_MAX - _LOG_PIN_MIN)))
+    return math.log10(max(pin, 1.0))
 
 
 def gap_score(coverage_ratio: float, pin_share: float, pin: int | float) -> float:

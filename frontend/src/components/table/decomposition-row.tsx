@@ -27,7 +27,7 @@ function renderBody(row: CountryRow, meta: RankingMeta, column: Decomposable) {
     case "gap_score": {
       const shortfall = 1 - Math.min(row.coverage_ratio, 1);
       if (row.pin_share != null && row.pin != null) {
-        const logPin = Math.max(0, Math.min(1, (Math.log10(Math.max(row.pin, 1)) - 6) / (8.3 - 6)));
+        const logPin = row.pin <= 0 ? 0 : Math.log10(Math.max(row.pin, 1));
         const need = 0.5 * row.pin_share + 0.5 * logPin;
         return (
           <span>
