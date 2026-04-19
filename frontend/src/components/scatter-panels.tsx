@@ -94,7 +94,7 @@ export function ScatterPanels({
               stroke="var(--text-muted)"
             />
             <ZAxis type="number" dataKey="z" range={[50, 400]} />
-            <Tooltip content={<CompassTooltip />} cursor={false} />
+            <Tooltip content={<CompassTooltip />} cursor={false} isAnimationActive={false} />
             
             {/* The Crosshairs creating the 4 Quadrants */}
             <ReferenceLine x={medianX} stroke="var(--text-muted)" strokeWidth={1} />
@@ -150,19 +150,26 @@ export function ScatterPanels({
 }
 
 function CompassTooltip({ active, payload }: { active?: boolean; payload?: { payload: { country: string; pin: number; y: number; unmet: number } }[] }) {
-  if (!active || !payload || !payload.length) return null;
-  const p = payload[0].payload;
+  const show = active && payload && payload.length > 0;
+  const p = show ? payload![0].payload : null;
   return (
-    <div className="rounded border border-border bg-surface p-2 text-xs shadow-lg">
-      <div className="font-semibold border-b border-border pb-1 mb-1">{p.country}</div>
-      <div className="grid grid-cols-[1fr_auto] gap-x-3">
-        <span className="text-text-muted">Level of Need (PIN):</span>
-        <span className="font-medium">{numCompact(p.pin)}</span>
-        <span className="text-text-muted">INFORM Severity:</span>
-        <span className="font-medium">{p.y.toFixed(1)}/10</span>
-        <span className="text-text-muted">Unmet Need:</span>
-        <span className="font-medium">{usdCompact(p.unmet)}</span>
-      </div>
+    <div
+      className="rounded border border-border bg-surface p-2 text-xs shadow-lg transition-opacity duration-400"
+      style={{ opacity: show ? 1 : 0 }}
+    >
+      {p && (
+        <>
+          <div className="font-semibold border-b border-border pb-1 mb-1">{p.country}</div>
+          <div className="grid grid-cols-[1fr_auto] gap-x-3">
+            <span className="text-text-muted">Level of Need (PIN):</span>
+            <span className="font-medium">{numCompact(p.pin)}</span>
+            <span className="text-text-muted">INFORM Severity:</span>
+            <span className="font-medium">{p.y.toFixed(1)}/10</span>
+            <span className="text-text-muted">Unmet Need:</span>
+            <span className="font-medium">{usdCompact(p.unmet)}</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }
