@@ -23,11 +23,11 @@ export function Navbar() {
       <div className="mx-auto flex max-w-[1440px] items-center gap-6 px-4 py-2.5">
         <Link
           href={`/${suffix}`}
-          className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"
+          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight"
         >
-          <Compass className="h-4 w-4 text-map-teal-2" strokeWidth={1.75} />
+          <Compass className="h-5 w-5 text-map-teal-2" strokeWidth={1.75} />
           <span>CrisisCompass</span>
-          <span className="hidden text-[12px] font-normal text-text-muted sm:inline">
+          <span className="hidden text-sm font-normal text-text-muted sm:inline">
             · makes every human life count
           </span>
         </Link>

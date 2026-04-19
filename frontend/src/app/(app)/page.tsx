@@ -43,7 +43,6 @@ export default async function Page(props: {
           <div className="flex items-center gap-3 text-xs">
             <DataCoverageAnchor params={apiParams} excludedCount={ranking.meta.excluded_count} />
             <MethodologyButton />
-            <span className="text-text-muted">Press ? for keyboard shortcuts</span>
           </div>
         </div>
       </header>
